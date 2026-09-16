@@ -1,671 +1,256 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>XSearch - Modern Search Engine</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>XSearch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter', 'sans-serif'] },
+        colors: {
+          ink: {
+            50:'#F8FAFC',100:'#F1F5F9',200:'#E4E9F2',300:'#CBD5E1',
+            400:'#94A0B4',500:'#64748B',600:'#475569',700:'#334155',
+            800:'#1E293B',900:'#101827',950:'#0A0E17'
           },
-          colors: {
-            brand: {
-              50: '#f0f7ff',
-              100: '#e0effe',
-              500: '#2563eb',
-              600: '#1d4ed8',
-              700: '#1e40af',
-            }
+          brand: {
+            50:'#EFF4FF',100:'#DFE9FE',300:'#93B4FD',400:'#5B8DEF',
+            500:'#3B6DF0',600:'#2563EB',700:'#1D4ED8',800:'#1E40AF'
           }
+        },
+        keyframes: {
+          heroIn: {
+            '0%': { opacity: 0, transform: 'translateY(10px)' },
+            '100%': { opacity: 1, transform: 'translateY(0)' }
+          },
+          popIn: {
+            '0%': { opacity: 0, transform: 'scale(.97)' },
+            '100%': { opacity: 1, transform: 'scale(1)' }
+          }
+        },
+        animation: {
+          heroIn: 'heroIn .55s cubic-bezier(.16,1,.3,1) both',
+          popIn: 'popIn .16s ease-out both'
         }
       }
     }
-  </script>
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-    .transition-theme {
-      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    }
-    .line-clamp-3 {
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .line-clamp-1 {
-      display: -webkit-box;
-      -webkit-line-clamp: 1;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 9999px;
-    }
-    .dark ::-webkit-scrollbar-thumb {
-      background: #334155;
-    }
-  </style>
+  }
+</script>
+<style>
+  :root{
+    --glow-a: rgba(59,109,240,.16);
+    --glow-b: rgba(14,165,233,.11);
+  }
+  .dark{
+    --glow-a: rgba(91,141,239,.20);
+    --glow-b: rgba(99,140,241,.12);
+  }
+  body{ font-family:'Inter',sans-serif; }
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:9999px; }
+  .dark ::-webkit-scrollbar-thumb{ background:#2b3444; }
+
+  .transition-theme{ transition: background-color .25s ease, color .25s ease, border-color .25s ease; }
+  .line-clamp-2{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .line-clamp-1{ display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+
+  .bg-glow{
+    background:
+      radial-gradient(60% 55% at 50% 38%, var(--glow-a), transparent 70%),
+      radial-gradient(40% 40% at 68% 60%, var(--glow-b), transparent 70%);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+  }
+
+  /* result rows: flat list, not cards */
+  .result-row{
+    padding: 14px 4px;
+    border-bottom: 1px solid transparent;
+  }
+  .result-row:not(:last-child){ border-color: rgb(226 232 240 / .7); }
+  .dark .result-row:not(:last-child){ border-color: rgb(30 39 56 / .9); }
+  .result-row:hover{ background: rgb(37 99 235 / .035); border-radius: 12px; }
+  .dark .result-row:hover{ background: rgb(91 141 239 / .05); }
+
+  /* autocomplete dropdown */
+  .ac-panel{
+    animation: popIn .14s ease-out both;
+  }
+  .ac-item.active, .ac-item:hover{ background: rgb(37 99 235 / .06); }
+  .dark .ac-item.active, .dark .ac-item:hover{ background: rgb(91 141 239 / .09); }
+
+  /* lightbox */
+  #lightbox{ backdrop-filter: blur(6px); }
+
+  .scrollbar-thin::-webkit-scrollbar{ height:6px; }
+</style>
 </head>
-<body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-theme flex flex-col min-h-screen">
-  <header class="w-full px-4 sm:px-8 py-4 flex items-center justify-between border-b border-transparent dark:border-transparent transition-colors z-20">
-    <a href="#" onclick="resetToHome(event)" class="group flex items-center gap-2 focus:outline-none">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white font-extrabold text-xl shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
-        X
-      </div>
-      <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white hidden sm:inline-block">
-        XSearch
-      </span>
+<body class="h-full bg-[#FAFBFF] dark:bg-ink-950 text-ink-900 dark:text-ink-100 transition-theme flex flex-col min-h-screen">
+
+  <header class="w-full px-4 sm:px-8 py-4 flex items-center justify-between z-20">
+    <a href="#" onclick="resetToHome(event)" class="group flex items-center gap-2.5 focus:outline-none rounded-lg">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-600 to-indigo-500 flex items-center justify-center text-white font-extrabold text-base shadow-sm shadow-brand-500/30 group-hover:scale-105 transition-transform">X</div>
+      <span class="text-[1.15rem] font-bold tracking-[-0.01em] text-ink-900 dark:text-white">XSearch</span>
     </a>
-    <button
-      id="theme-toggle"
-      onclick="toggleTheme()"
-      type="button"
-      aria-label="Toggle light and dark mode"
-      class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-sm"
-    >
-      <svg id="sun-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-      <svg id="moon-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-      </svg>
-    </button>
+    <div class="flex items-center gap-1.5">
+      <button onclick="openAbout()" type="button" aria-label="About XSearch"
+        class="p-2.5 rounded-xl text-ink-400 hover:text-ink-600 dark:text-ink-500 dark:hover:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition-all">
+        <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 11v5m0-8h.01"/></svg>
+      </button>
+      <button id="theme-toggle" onclick="toggleTheme()" type="button" aria-label="Toggle light and dark mode"
+        class="p-2.5 rounded-xl text-ink-500 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition-all">
+        <svg id="sun-icon" class="w-[18px] h-[18px] hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <svg id="moon-icon" class="w-[18px] h-[18px] hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+      </button>
+    </div>
   </header>
+
   <main class="flex-1 flex flex-col items-center w-full px-4 sm:px-6">
-    <div id="hero-view" class="relative flex-1 flex flex-col items-center justify-center w-full max-w-2xl py-12 my-auto">
-      <div class="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 sm:w-96 h-80 sm:h-96 bg-gradient-to-tr from-brand-500/15 via-indigo-500/15 to-purple-500/10 dark:from-brand-600/20 dark:via-indigo-600/15 dark:to-cyan-500/10 rounded-full blur-3xl -z-10 transition-opacity duration-500"></div>
-      <div class="text-center mb-8 space-y-3 flex flex-col items-center">
-        <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          <span class="bg-gradient-to-r from-brand-600 via-indigo-600 to-sky-400 bg-clip-text text-transparent">XSearch</span>
-        </h1>
-        <p class="text-slate-500 dark:text-slate-400 text-base sm:text-lg font-normal max-w-md">
-          Search the web with real-time speed and precision.
-        </p>
-      </div>
-      <div class="w-full relative group">
-        <form onsubmit="handleSearch(event, 'hero')" class="relative flex items-center">
-          <div class="absolute left-5 top-1/2 -translate-y-1/2 z-10 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-500 transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-          </div>
-          <input
-            type="text"
-            id="hero-search-input"
-            placeholder="Search anything..."
-            autocomplete="off"
-            autofocus
-            oninput="handleInputChange('hero')"
-            class="w-full pl-14 pr-36 py-4 text-base sm:text-lg bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50 backdrop-blur-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 dark:focus:border-brand-500 transition-all duration-200"
-          />
-          <div class="absolute right-3 flex items-center gap-1.5">
-            <kbd class="hidden sm:inline-flex items-center gap-0.5 px-2 py-1 text-[10px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 dark:text-slate-500 border border-slate-200 dark:border-slate-700/60 rounded-md">
-              /
-            </kbd>
-            <button
-              type="button"
-              onclick="clearInput('hero')"
-              id="hero-clear-btn"
-              title="Clear input"
-              class="hidden p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition-colors"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-            <button
-              type="button"
-              onclick="toggleVoiceSearch('hero')"
-              id="hero-mic-btn"
-              title="Search with voice"
-              class="p-2 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            </button>
-            <button
-              type="submit"
-              class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-medium text-sm rounded-xl shadow-md shadow-brand-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-brand-500 flex items-center justify-center"
-            >
-              Search
-            </button>
-          </div>
-        </form>
+
+    <!-- HERO / HOMEPAGE -->
+    <div id="hero-view" class="relative flex-1 flex flex-col items-center justify-center w-full max-w-xl py-12 my-auto bg-glow">
+      <div class="w-full flex flex-col items-center animate-heroIn">
+        <div class="text-center mb-8 flex flex-col items-center">
+          <h1 class="text-[3.1rem] sm:text-[3.6rem] font-extrabold tracking-[-0.03em] leading-none mb-3">
+            <span class="bg-gradient-to-r from-brand-700 via-brand-500 to-sky-400 bg-clip-text text-transparent">XSearch</span>
+          </h1>
+          <p class="text-ink-500 dark:text-ink-400 text-[0.95rem] font-normal">Search the web with real-time speed and precision.</p>
+        </div>
+
+        <div class="w-full relative" id="hero-search-wrap">
+          <form onsubmit="handleSearch(event, 'hero')" class="relative flex items-center" autocomplete="off">
+            <div class="absolute left-5 top-1/2 -translate-y-1/2 z-10 text-ink-400 dark:text-ink-500">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <input type="text" id="hero-search-input" placeholder="Search anything…" autocomplete="off" autofocus
+              oninput="handleInputChange('hero')" onkeydown="handleAcKeydown(event,'hero')" onfocus="renderAutocomplete('hero')"
+              class="w-full pl-13 pr-32 py-4 text-[1.05rem] bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-[0_1px_2px_rgba(15,23,42,0.04)] text-ink-900 dark:text-ink-100 placeholder-ink-400 dark:placeholder-ink-500 focus:outline-none focus:ring-[3px] focus:ring-brand-500/15 focus:border-brand-400 dark:focus:border-brand-500 transition-all duration-150" style="padding-left:3.1rem"/>
+            <div class="absolute right-3 flex items-center gap-1">
+              <kbd class="hidden sm:inline-flex items-center px-1.5 py-1 text-[10px] font-medium text-ink-400 dark:text-ink-500 bg-ink-100 dark:bg-ink-800/70 border border-ink-200 dark:border-ink-700/60 rounded-md">/</kbd>
+              <button type="button" onclick="clearInput('hero')" id="hero-clear-btn" title="Clear" class="hidden p-2 text-ink-400 hover:text-ink-600 dark:hover:text-ink-200 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+              <button type="button" onclick="toggleVoiceSearch('hero')" id="hero-mic-btn" title="Search with voice" class="p-2 text-ink-400 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl hover:bg-ink-100 dark:hover:bg-ink-800 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+              </button>
+              <button type="submit" title="Search" class="p-2.5 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white rounded-xl shadow-sm shadow-brand-500/25 transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/40">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </button>
+            </div>
+          </form>
+          <div id="hero-ac-panel" class="hidden ac-panel absolute left-0 right-0 mt-2 bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-lg shadow-ink-900/5 overflow-hidden z-30"></div>
+        </div>
+
         <div id="recent-searches-container" class="w-full mt-6 hidden">
-          <div class="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400 mb-2.5 px-1">
+          <div class="flex items-center justify-between text-xs text-ink-400 dark:text-ink-500 mb-2.5 px-0.5">
             <span class="flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Recent Searches
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Recent
             </span>
-            <button
-              type="button"
-              id="clear-history-btn"
-              onclick="clearRecentSearches()"
-              class="hover:text-red-500 dark:hover:text-red-400 transition-colors focus:outline-none"
-            >
-              Clear history
-            </button>
+            <button type="button" onclick="clearRecentSearches()" class="hover:text-red-500 transition-colors focus:outline-none">Clear</button>
           </div>
           <div id="recent-searches-list" class="flex flex-wrap gap-2"></div>
         </div>
       </div>
     </div>
-    <div id="results-view" class="hidden w-full max-w-4xl py-4 space-y-6">
-      <div class="sticky top-4 z-10 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md pt-1 pb-3">
-        <form onsubmit="handleSearch(event, 'top')" class="relative flex items-center max-w-3xl">
-          <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-          </div>
-          <input
-            type="text"
-            id="top-search-input"
-            placeholder="Search anything..."
-            autocomplete="off"
-            oninput="handleInputChange('top')"
-            class="w-full pl-12 pr-28 py-3 text-base bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
-          />
-          <div class="absolute right-2.5 flex items-center gap-1">
-            <button
-              type="button"
-              onclick="clearInput('top')"
-              id="top-clear-btn"
-              title="Clear input"
-              class="hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg transition-colors"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-            <button
-              type="button"
-              onclick="toggleVoiceSearch('top')"
-              id="top-mic-btn"
-              title="Search with voice"
-              class="p-2 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg transition-colors"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            </button>
-            <button
-              type="submit"
-              class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs sm:text-sm rounded-lg shadow transition-all focus:outline-none focus:ring-2 focus:ring-brand-500"
-            >
-              Search
-            </button>
-          </div>
-        </form>
-      </div>
-      <div id="results-meta" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 px-1 hidden">
-        Showing results for <span id="meta-query" class="font-semibold text-slate-800 dark:text-slate-200"></span>
-      </div>
-      <div id="loading-state" class="hidden space-y-6 max-w-3xl">
-        <div class="p-5 bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl animate-pulse space-y-3">
-          <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/3"></div>
-          <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded w-2/3"></div>
-          <div class="space-y-2 pt-1">
-            <div class="h-3.5 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
-            <div class="h-3.5 bg-slate-200 dark:bg-slate-800 rounded w-5/6"></div>
-            <div class="h-3.5 bg-slate-200 dark:bg-slate-800 rounded w-4/6"></div>
-          </div>
-        </div>
-        <div class="p-5 bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl animate-pulse space-y-3">
-          <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
-          <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
-          <div class="space-y-2 pt-1">
-            <div class="h-3.5 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
-            <div class="h-3.5 bg-slate-200 dark:bg-slate-800 rounded w-11/12"></div>
-            <div class="h-3.5 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
-          </div>
-        </div>
-        <div class="p-5 bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl animate-pulse space-y-3">
-          <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-2/5"></div>
-          <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded w-3/5"></div>
-          <div class="space-y-2 pt-1">
-            <div class="h-3.5 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
-            <div class="h-3.5 bg-slate-200 dark:bg-slate-800 rounded w-4/5"></div>
-          </div>
+
+    <!-- RESULTS VIEW -->
+    <div id="results-view" class="hidden w-full max-w-3xl py-4">
+      <div class="sticky top-0 z-10 bg-[#FAFBFF]/90 dark:bg-ink-950/90 backdrop-blur-md pt-2 pb-3">
+        <div class="relative flex items-center max-w-xl" id="top-search-wrap">
+          <form onsubmit="handleSearch(event, 'top')" class="relative flex items-center w-full" autocomplete="off">
+            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-ink-400 dark:text-ink-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <input type="text" id="top-search-input" placeholder="Search anything…" autocomplete="off"
+              oninput="handleInputChange('top')" onkeydown="handleAcKeydown(event,'top')" onfocus="renderAutocomplete('top')"
+              class="w-full py-2.5 text-sm bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-xl shadow-sm text-ink-900 dark:text-ink-100 placeholder-ink-400 focus:outline-none focus:ring-[3px] focus:ring-brand-500/15 focus:border-brand-400 transition-all" style="padding-left:2.5rem; padding-right:6rem"/>
+            <div class="absolute right-2 flex items-center gap-0.5">
+              <button type="button" onclick="clearInput('top')" id="top-clear-btn" title="Clear" class="hidden p-1.5 text-ink-400 hover:text-ink-600 dark:hover:text-ink-200 rounded-lg transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+              <button type="button" onclick="toggleVoiceSearch('top')" id="top-mic-btn" title="Voice search" class="p-1.5 text-ink-400 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+              </button>
+              <button type="submit" title="Search" class="p-1.5 text-brand-600 hover:text-brand-700 dark:text-brand-400 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </button>
+            </div>
+          </form>
+          <div id="top-ac-panel" class="hidden ac-panel absolute left-0 right-0 top-full mt-2 max-w-xl bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-lg shadow-ink-900/5 overflow-hidden z-30"></div>
         </div>
       </div>
-      <div id="error-state" class="hidden p-6 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-2xl text-center max-w-2xl mx-auto space-y-3">
-        <div class="w-12 h-12 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-        </div>
-        <h3 class="text-lg font-semibold text-red-800 dark:text-red-200" id="error-title">Unable to complete search</h3>
-        <p class="text-sm text-red-600 dark:text-red-300 max-w-md mx-auto" id="error-message">Something went wrong while fetching search results. Please try again.</p>
-        <button onclick="retrySearch()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-xl transition-colors shadow">
-          Try Again
-        </button>
+
+      <div id="results-meta" class="text-[13px] text-ink-400 dark:text-ink-500 px-1 pb-1 hidden"></div>
+      <div id="didyoumean" class="text-sm px-1 pb-3 hidden"></div>
+
+      <div id="loading-state" class="hidden space-y-5 pt-2">
+        <div class="space-y-2 animate-pulse"><div class="h-3 bg-ink-200 dark:bg-ink-800 rounded w-1/4"></div><div class="h-4 bg-ink-200 dark:bg-ink-800 rounded w-1/2"></div><div class="h-3 bg-ink-200 dark:bg-ink-800 rounded w-full"></div><div class="h-3 bg-ink-200 dark:bg-ink-800 rounded w-5/6"></div></div>
+        <div class="space-y-2 animate-pulse"><div class="h-3 bg-ink-200 dark:bg-ink-800 rounded w-1/3"></div><div class="h-4 bg-ink-200 dark:bg-ink-800 rounded w-2/5"></div><div class="h-3 bg-ink-200 dark:bg-ink-800 rounded w-full"></div><div class="h-3 bg-ink-200 dark:bg-ink-800 rounded w-3/4"></div></div>
+        <div class="space-y-2 animate-pulse"><div class="h-3 bg-ink-200 dark:bg-ink-800 rounded w-1/5"></div><div class="h-4 bg-ink-200 dark:bg-ink-800 rounded w-1/2"></div><div class="h-3 bg-ink-200 dark:bg-ink-800 rounded w-11/12"></div></div>
       </div>
-      <div id="empty-state" class="hidden p-12 text-center max-w-md mx-auto space-y-3">
-        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800/80 text-slate-400 rounded-full flex items-center justify-center mx-auto">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+
+      <div id="error-state" class="hidden p-8 text-center space-y-3">
+        <div class="w-11 h-11 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
         </div>
-        <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200">No results found</h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400">We couldn't find anything matching your query. Try checking for typos or using different keywords.</p>
+        <h3 class="text-base font-semibold text-ink-800 dark:text-ink-100">Search didn't go through</h3>
+        <p class="text-sm text-ink-500 dark:text-ink-400 max-w-sm mx-auto" id="error-message">Couldn't reach the search service. Check your connection and try again.</p>
+        <button onclick="retrySearch()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium rounded-xl transition-colors">Try again</button>
       </div>
-      <div id="results-list" class="space-y-4 max-w-3xl"></div>
+
+      <div id="empty-state" class="hidden p-10 text-center space-y-2 max-w-sm mx-auto">
+        <div class="w-14 h-14 bg-ink-100 dark:bg-ink-900 text-ink-400 rounded-full flex items-center justify-center mx-auto">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <h3 class="text-base font-semibold text-ink-800 dark:text-ink-200">No results found</h3>
+        <p class="text-sm text-ink-500 dark:text-ink-400">Try different keywords or check for typos.</p>
+      </div>
+
+      <div id="results-list"></div>
+      <div id="related-searches" class="hidden mt-6 pt-5 border-t border-ink-200 dark:border-ink-800"></div>
     </div>
   </main>
-  <script>
-    const API_ENDPOINT = 'https://search.xerrortm.workers.dev/search?q=';
-    const RECENT_SEARCHES_KEY = 'xsearch_recent_searches';
-    let currentQuery = '';
-    let isListening = false;
-    let recognition = null;
-    document.addEventListener('DOMContentLoaded', () => {
-      initTheme();
-      renderRecentSearches();
-      checkUrlQuery();
-      setupSpeechRecognition();
-      setupKeyboardShortcuts();
-    });
-    function setupKeyboardShortcuts() {
-      document.addEventListener('keydown', (e) => {
-        const activeTag = document.activeElement?.tagName?.toLowerCase();
-        if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && activeTag !== 'input' && activeTag !== 'textarea')) {
-          e.preventDefault();
-          const targetInput = document.getElementById('hero-view').classList.contains('hidden')
-            ? document.getElementById('top-search-input')
-            : document.getElementById('hero-search-input');
-          if (targetInput) {
-            targetInput.focus();
-            targetInput.select();
-          }
-        }
-      });
-    }
-    function getRecentSearches() {
-      try {
-        const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
-        if (!stored) return [];
-        const parsed = JSON.parse(stored);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        console.warn('Failed to read recent searches:', e);
-        return [];
-      }
-    }
-    function saveRecentSearch(query) {
-      if (!query || !query.trim()) return;
-      const cleanQuery = query.trim();
-      try {
-        let searches = getRecentSearches();
-        searches = searches.filter(q => q.toLowerCase() !== cleanQuery.toLowerCase());
-        searches.unshift(cleanQuery);
-        searches = searches.slice(0, 8);
-        localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(searches));
-        renderRecentSearches();
-      } catch (e) {
-        console.warn('Failed to save recent search:', e);
-      }
-    }
-    function clearRecentSearches() {
-      try {
-        localStorage.removeItem(RECENT_SEARCHES_KEY);
-        renderRecentSearches();
-      } catch (e) {
-        console.warn('Failed to clear recent searches:', e);
-      }
-    }
-    function renderRecentSearches() {
-      const container = document.getElementById('recent-searches-container');
-      const listEl = document.getElementById('recent-searches-list');
-      const clearBtn = document.getElementById('clear-history-btn');
-      if (!container || !listEl) return;
-      const searches = getRecentSearches();
-      if (searches.length === 0) {
-        container.classList.add('hidden');
-        listEl.innerHTML = '';
-        return;
-      }
-      container.classList.remove('hidden');
-      if (clearBtn) clearBtn.classList.remove('hidden');
-      listEl.innerHTML = searches.map(s => `
-        <button
-          type="button"
-          onclick="executeSearch('${escapeHtml(s)}')"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 hover:border-brand-500/80 dark:hover:border-brand-500/80 hover:bg-brand-50/50 dark:hover:bg-brand-950/30 rounded-xl text-xs text-slate-700 dark:text-slate-300 font-medium shadow-xs backdrop-blur-sm transition-all hover:scale-[1.02] active:scale-95 focus:outline-none focus:ring-2 focus:ring-brand-500"
-        >
-          <svg class="w-3 h-3 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          <span>${escapeHtml(s)}</span>
-        </button>
-      `).join('');
-    }
-    function checkUrlQuery() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const query = urlParams.get('q');
-      if (query && query.trim()) {
-        executeSearch(query.trim());
-      }
-    }
-    function initTheme() {
-      const savedTheme = localStorage.getItem('xsearch_theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        document.documentElement.classList.add('dark');
-        document.getElementById('sun-icon').classList.remove('hidden');
-        document.getElementById('moon-icon').classList.add('hidden');
-      } else {
-        document.documentElement.classList.remove('dark');
-        document.getElementById('sun-icon').classList.add('hidden');
-        document.getElementById('moon-icon').classList.remove('hidden');
-      }
-    }
-    function toggleTheme() {
-      const isDark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('xsearch_theme', isDark ? 'dark' : 'light');
-      if (isDark) {
-        document.getElementById('sun-icon').classList.remove('hidden');
-        document.getElementById('moon-icon').classList.add('hidden');
-      } else {
-        document.getElementById('sun-icon').classList.add('hidden');
-        document.getElementById('moon-icon').classList.remove('hidden');
-      }
-    }
-    function showResultsView() {
-      document.getElementById('hero-view').classList.add('hidden');
-      document.getElementById('results-view').classList.remove('hidden');
-    }
-    function resetToHome(e) {
-      if (e) e.preventDefault();
-      currentQuery = '';
-      document.getElementById('hero-search-input').value = '';
-      document.getElementById('top-search-input').value = '';
-      clearInput('hero');
-      clearInput('top');
-      document.getElementById('results-view').classList.add('hidden');
-      document.getElementById('hero-view').classList.remove('hidden');
-      renderRecentSearches();
-      try {
-        window.history.pushState({}, '', window.location.pathname);
-      } catch (e) {
-        console.warn('Browser history update skipped in sandboxed environment:', e);
-      }
-      setTimeout(() => {
-        document.getElementById('hero-search-input').focus();
-      }, 100);
-    }
-    function handleInputChange(source) {
-      const input = document.getElementById(`${source}-search-input`);
-      const clearBtn = document.getElementById(`${source}-clear-btn`);
-      if (input.value.trim().length > 0) {
-        clearBtn.classList.remove('hidden');
-      } else {
-        clearBtn.classList.add('hidden');
-      }
-    }
-    function clearInput(source) {
-      const input = document.getElementById(`${source}-search-input`);
-      input.value = '';
-      input.focus();
-      document.getElementById(`${source}-clear-btn`).classList.add('hidden');
-    }
-    function handleSearch(e, source) {
-      e.preventDefault();
-      const input = document.getElementById(`${source}-search-input`);
-      const query = input.value.trim();
-      if (query) {
-        executeSearch(query);
-      }
-    }
-    function retrySearch() {
-      if (currentQuery) {
-        executeSearch(currentQuery);
-      }
-    }
-    async function executeSearch(query) {
-      currentQuery = query;
-      document.getElementById('hero-search-input').value = query;
-      document.getElementById('top-search-input').value = query;
-      handleInputChange('hero');
-      handleInputChange('top');
-      saveRecentSearch(query);
-      try {
-        const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
-        window.history.pushState({ path: newUrl }, '', newUrl);
-      } catch (e) {
-        console.warn('Browser history update skipped in sandboxed environment:', e);
-      }
-      showResultsView();
-      document.getElementById('loading-state').classList.remove('hidden');
-      document.getElementById('results-list').innerHTML = '';
-      document.getElementById('results-meta').classList.add('hidden');
-      document.getElementById('error-state').classList.add('hidden');
-      document.getElementById('empty-state').classList.add('hidden');
-      try {
-        const response = await fetch(`${API_ENDPOINT}${encodeURIComponent(query)}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        document.getElementById('loading-state').classList.add('hidden');
-        if (!data.results || !Array.isArray(data.results) || data.results.length === 0) {
-          document.getElementById('empty-state').classList.remove('hidden');
-          return;
-        }
-        document.getElementById('meta-query').textContent = `"${query}"`;
-        document.getElementById('results-meta').classList.remove('hidden');
-        const sortedResults = [...data.results].sort((a, b) => {
-          const scoreA = typeof a.score === 'number' ? a.score : 0;
-          const scoreB = typeof b.score === 'number' ? b.score : 0;
-          return scoreB - scoreA;
-        });
-        renderResults(sortedResults, data.images || []);
-      } catch (err) {
-        console.error('Search request failed:', err);
-        document.getElementById('loading-state').classList.add('hidden');
-        document.getElementById('error-message').textContent = 'Unable to fetch search results from the worker endpoint. Please check your network connection and try again.';
-        document.getElementById('error-state').classList.remove('hidden');
-      }
-    }
-    function renderResults(results, images = []) {
-      const container = document.getElementById('results-list');
-      container.innerHTML = '';
-      results.forEach((item, index) => {
-        const domain = getDomain(item.url);
-        const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32`;
-        const card = document.createElement('div');
-        card.className = "p-5 bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 rounded-2xl shadow-sm transition-all duration-200 group";
-        card.innerHTML = `
-          <div class="flex items-center gap-2 mb-1.5">
-            <img
-              src="${faviconUrl}"
-              alt=""
-              class="w-4 h-4 rounded-sm object-contain bg-slate-100 dark:bg-slate-800"
-              onerror="this.style.display='none'"
-            />
-            <div class="flex flex-col">
-              <span class="text-xs font-medium text-slate-700 dark:text-slate-300 line-clamp-1">${escapeHtml(domain)}</span>
-              <span class="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-1">${escapeHtml(item.url)}</span>
-            </div>
-          </div>
-          <h2 class="text-lg sm:text-xl font-semibold leading-snug mb-2">
-            <a
-              href="${escapeHtml(item.url)}"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-brand-600 dark:text-sky-400 hover:text-brand-700 dark:hover:text-sky-300 hover:underline focus:outline-none focus:ring-2 focus:ring-brand-500 rounded"
-            >
-              ${escapeHtml(item.title || item.url)}
-            </a>
-          </h2>
-          <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal line-clamp-3">
-            ${escapeHtml(item.content || 'No description available for this result.')}
-          </p>
-        `;
-        container.appendChild(card);
-        if (index === 0 && Array.isArray(images) && images.length > 0) {
-          const imagesSection = createImagesSection(images);
-          if (imagesSection) {
-            container.appendChild(imagesSection);
-          }
-        }
-      });
-    }
-    function createImagesSection(images) {
-      if (!Array.isArray(images) || images.length === 0) return null;
-      const validImages = images.filter(img => img);
-      if (validImages.length === 0) return null;
-      const section = document.createElement('div');
-      section.className = "p-4 bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm my-2 space-y-3";
-      const itemsHtml = validImages.map(img => {
-        let imgUrl = '';
-        let targetUrl = '';
-        let altText = 'Result image';
-        if (typeof img === 'string') {
-          imgUrl = img;
-          targetUrl = img;
-        } else if (typeof img === 'object' && img !== null) {
-          imgUrl = img.url || img.image_url || '';
-          targetUrl = img.target_url || img.source_url || img.url || imgUrl;
-          altText = img.description || img.alt || 'Result image';
-        }
-        if (!imgUrl) return '';
-        return `
-          <a
-            href="${escapeHtml(targetUrl)}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="group/img flex-none relative w-36 h-28 sm:w-44 sm:h-32 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-800 hover:ring-2 hover:ring-brand-500 transition-all focus:outline-none"
-            onclick="event.stopPropagation();"
-          >
-            <img
-              src="${escapeHtml(imgUrl)}"
-              alt="${escapeHtml(altText)}"
-              class="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-200"
-              onerror="this.parentElement.remove(); checkEmptyImagesContainer(this);"
-            />
-          </a>
-        `;
-      }).join('');
-      if (!itemsHtml.trim()) return null;
-      section.innerHTML = `
-        <div class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-brand-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-          </svg>
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Images</h3>
-        </div>
-        <div class="images-scroll-row flex gap-3 overflow-x-auto pb-1.5 scrollbar-thin">
-          ${itemsHtml}
-        </div>
-      `;
-      return section;
-    }
-    function checkEmptyImagesContainer(imgElem) {
-      const scrollRow = imgElem?.closest('.images-scroll-row');
-      if (scrollRow && scrollRow.children.length === 0) {
-        const section = scrollRow.closest('.p-4');
-        if (section) section.remove();
-      }
-    }
-    function getDomain(urlString) {
-      try {
-        const url = new URL(urlString);
-        return url.hostname.replace(/^www\./, '');
-      } catch (e) {
-        return urlString;
-      }
-    }
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-    // Voice Search Capability
-    function setupSpeechRecognition() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'en-US';
-        recognition.onresult = (event) => {
-          const transcript = event.results[0][0].transcript;
-          if (transcript) {
-            executeSearch(transcript);
-          }
-          stopListening();
-        };
-        recognition.onerror = () => {
-          stopListening();
-        };
-        recognition.onend = () => {
-          stopListening();
-        };
-      } else {
-        // Hide mic buttons if speech API isn't supported
-        const heroMic = document.getElementById('hero-mic-btn');
-        const topMic = document.getElementById('top-mic-btn');
-        if (heroMic) heroMic.style.display = 'none';
-        if (topMic) topMic.style.display = 'none';
-      }
-    }
-    function toggleVoiceSearch(source) {
-      if (!recognition) return;
-      if (isListening) {
-        recognition.stop();
-        stopListening();
-      } else {
-        try {
-          recognition.start();
-          isListening = true;
-          const micBtn = document.getElementById(`${source}-mic-btn`);
-          if (micBtn) {
-            micBtn.classList.add('text-red-500', 'animate-pulse');
-            micBtn.classList.remove('text-slate-400');
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-    function stopListening() {
-      isListening = false;
-      ['hero', 'top'].forEach(source => {
-        const micBtn = document.getElementById(`${source}-mic-btn`);
-        if (micBtn) {
-          micBtn.classList.remove('text-red-500', 'animate-pulse');
-          micBtn.classList.add('text-slate-400');
-        }
-      });
-    }
-    // Handle back / forward browser navigation buttons
-    window.addEventListener('popstate', () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const query = urlParams.get('q');
-      if (query) {
-        executeSearch(query);
-      } else {
-        resetToHome();
-      }
-    });
-  </script>
+
+  <!-- back to top -->
+  <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"
+    class="hidden fixed bottom-6 right-6 p-3 bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 text-ink-500 dark:text-ink-300 rounded-full shadow-lg hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-300 transition-all z-30">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+  </button>
+
+  <!-- lightbox -->
+  <div id="lightbox" class="hidden fixed inset-0 bg-ink-950/70 z-40 flex items-center justify-center p-6" onclick="closeLightbox(event)">
+    <div class="relative max-w-3xl w-full flex flex-col items-center gap-3" onclick="event.stopPropagation()">
+      <img id="lightbox-img" src="" alt="" class="max-h-[75vh] max-w-full rounded-xl shadow-2xl object-contain"/>
+      <div class="flex items-center gap-3">
+        <a id="lightbox-link" href="#" target="_blank" rel="noopener noreferrer" class="text-xs px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">Visit source</a>
+        <button onclick="closeLightbox()" class="text-xs px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- about modal -->
+  <div id="about-modal" class="hidden fixed inset-0 bg-ink-950/50 z-40 flex items-center justify-center p-6" onclick="closeAbout(event)">
+    <div class="bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-xl max-w-sm w-full p-6" onclick="event.stopPropagation()">
+      <div class="flex items-center gap-2 mb-3">
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-600 to-indigo-500 flex items-center justify-center text-white font-extrabold text-sm">X</div>
+        <span class="text-base font-bold">XSearch</span>
+      </div>
+      <p class="text-sm text-ink-500 dark:text-ink-400 leading-relaxed">A fast, no-clutter search engine. No tracking dashboards, no feeds — just search.</p>
+      <button onclick="closeAbout()" class="mt-4 w-full py-2 bg-ink-100 dark:bg-ink-800 hover:bg-ink-200 dark:hover:bg-ink-700 text-ink-700 dark:text-ink-200 text-sm font-medium rounded-xl transition-colors">Close</button>
+    </div>
+  </div>
+
+<script src="search.js"></script>
 </body>
 </html>
