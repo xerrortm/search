@@ -719,7 +719,7 @@
   function renderAiTextWithCitations(rawText){
     if (!rawText) return '';
 
-    const citationRegex = /\[([^\]|]+)\|([^\]]+)\]/g;
+    const citationRegex = /\[([^\]|]*)\|([^\]]*)\]/g;
     let resultHtml = '';
     let lastIndex = 0;
     let match;
