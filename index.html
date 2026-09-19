@@ -241,6 +241,65 @@
 				background: linear-gradient(90deg, rgb(39 39 42 / 0.6) 25%, rgb(63 63 70 / 0.8) 37%, rgb(39 39 42 / 0.6) 63%);
 				background-size: 400% 100%;
 			}
+			/* sponsored result row */
+			.result-row.is-sponsored {
+				background: rgb(139 92 246 / 0.05);
+			}
+			.result-row.is-sponsored:hover {
+				background: rgb(139 92 246 / 0.08);
+			}
+			/* settings + confirmation modals: scale/fade in and out */
+			.xs-modal {
+				opacity: 0;
+				backdrop-filter: blur(6px);
+				transition: opacity 0.22s ease;
+			}
+			.xs-modal .xs-card {
+				opacity: 0;
+				transform: scale(0.94) translateY(8px);
+				transition:
+					transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+					opacity 0.2s ease;
+			}
+			.xs-modal.xs-open,
+			.xs-modal.xs-open .xs-card {
+				opacity: 1;
+			}
+			.xs-modal.xs-open .xs-card {
+				transform: none;
+			}
+			/* toggle switch */
+			.xs-switch {
+				position: relative;
+				flex: none;
+				width: 44px;
+				height: 26px;
+				border-radius: 9999px;
+				background: #d4d4d8;
+				transition: background-color 0.25s ease;
+			}
+			.dark .xs-switch {
+				background: #3f3f46;
+			}
+			.xs-switch::after {
+				content: "";
+				position: absolute;
+				top: 3px;
+				left: 3px;
+				width: 20px;
+				height: 20px;
+				border-radius: 50%;
+				background: #fff;
+				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+				transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+			}
+			.xs-switch[aria-checked="true"],
+			.dark .xs-switch[aria-checked="true"] {
+				background: var(--xs-aura);
+			}
+			.xs-switch[aria-checked="true"]::after {
+				transform: translateX(18px);
+			}
 		</style>
 	</head>
 	<body
@@ -273,15 +332,12 @@
 			</a>
 			<div class="flex items-center gap-1">
 				<button
-					onclick="openAbout()"
+					onclick="openModal('settings-modal')"
 					type="button"
-					aria-label="About XSearch"
+					aria-label="Settings"
 					class="p-2.5 rounded-xl text-ink-400 hover:text-ink-600 dark:text-ink-500 dark:hover:text-ink-300 hover:bg-ink-900/5 dark:hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition-colors"
 				>
-					<svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<circle cx="12" cy="12" r="9" stroke-width="2" />
-						<path stroke-linecap="round" stroke-width="2" d="M12 11v5m0-8h.01" />
-					</svg>
+					<svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
 				</button>
 				<button
 					id="theme-toggle"
@@ -647,38 +703,96 @@
 				</div>
 			</div>
 		</div>
-		<!-- about modal -->
+		<!-- settings modal -->
 		<div
-			id="about-modal"
-			class="hidden fixed inset-0 bg-ink-950/50 z-40 flex items-center justify-center p-6"
-			onclick="closeAbout(event)"
+			id="settings-modal"
+			class="xs-modal hidden fixed inset-0 bg-ink-950/50 z-40 flex items-center justify-center p-6"
+			onclick="closeModal('settings-modal')"
 		>
 			<div
-				class="bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-xl max-w-sm w-full p-6"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="settings-title"
+				class="xs-card bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-xl max-w-sm w-full p-6"
 				onclick="event.stopPropagation()"
 			>
-				<div class="flex items-center gap-2 mb-3">
-					<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
-						<circle cx="12" cy="12" r="6.4" stroke="url(#xsGrad)" stroke-width="1.8" />
-						<circle cx="12" cy="12" r="1.5" fill="url(#xsGrad)" />
-						<path
-							stroke="url(#xsGrad)"
-							stroke-width="1.8"
-							stroke-linecap="round"
-							d="M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6"
-						/>
-					</svg>
-					<span class="font-display text-base font-semibold">XSearch</span>
+				<div class="flex items-center gap-2.5 mb-5">
+					<div class="w-8 h-8 rounded-lg flex items-center justify-center bg-aura-100/70 dark:bg-aura-900/40 text-aura-600 dark:text-aura-300">
+						<svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+					</div>
+					<h2 id="settings-title" class="font-display text-base font-semibold">Settings</h2>
 				</div>
-				<p class="text-sm text-ink-500 dark:text-ink-400 leading-relaxed">
+				<div class="space-y-2.5">
+					<div class="flex items-center gap-4 p-3.5 rounded-xl border border-ink-200/70 dark:border-ink-800/70 bg-ink-900/[0.02] dark:bg-white/[0.03]">
+						<div class="min-w-0 flex-1">
+							<div class="text-sm font-medium text-ink-900 dark:text-ink-100">AI Overview</div>
+							<p class="mt-0.5 text-xs leading-relaxed text-ink-500 dark:text-ink-400">Show an AI-written summary above your results.</p>
+						</div>
+						<button type="button" role="switch" aria-checked="true" aria-label="AI Overview" data-setting="aiOverview" onclick="toggleSetting('aiOverview')" class="xs-switch focus:outline-none focus-visible:ring-2 focus-visible:ring-aura-500/50"></button>
+					</div>
+					<div class="flex items-center gap-4 p-3.5 rounded-xl border border-ink-200/70 dark:border-ink-800/70 bg-ink-900/[0.02] dark:bg-white/[0.03]">
+						<div class="min-w-0 flex-1">
+							<div class="text-sm font-medium text-ink-900 dark:text-ink-100">Sponsored Results</div>
+							<p class="mt-0.5 text-xs leading-relaxed text-ink-500 dark:text-ink-400">A sponsored result may appear at the top of your search results.</p>
+						</div>
+						<button type="button" role="switch" aria-checked="false" aria-label="Sponsored Results" data-setting="sponsored" onclick="toggleSetting('sponsored')" class="xs-switch focus:outline-none focus-visible:ring-2 focus-visible:ring-aura-500/50"></button>
+					</div>
+				</div>
+				<p class="mt-4 text-[11px] leading-relaxed text-ink-400 dark:text-ink-500">
 					XSearch is a fast, modern search engine designed to make exploring the web simple, intuitive, and effortless.
 				</p>
 				<button
-					onclick="closeAbout()"
+					type="button"
+					onclick="closeModal('settings-modal')"
 					class="mt-4 w-full py-2 bg-ink-100 dark:bg-ink-800 hover:bg-ink-200 dark:hover:bg-ink-700 text-ink-700 dark:text-ink-200 text-sm font-medium rounded-xl transition-colors"
 				>
-					Close
+					Done
 				</button>
+			</div>
+		</div>
+		<!-- sponsored results confirmation -->
+		<div
+			id="sponsored-modal"
+			class="xs-modal hidden fixed inset-0 bg-ink-950/60 z-50 flex items-center justify-center p-6"
+			onclick="confirmSponsored(false)"
+		>
+			<div
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="sponsored-title"
+				class="xs-card relative overflow-hidden bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-3xl shadow-2xl max-w-sm w-full px-7 pt-9 pb-6 text-center"
+				onclick="event.stopPropagation()"
+			>
+				<div class="bg-glow absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+				<div class="relative">
+					<div class="mx-auto mb-5 w-24 h-24 rounded-[1.75rem] flex items-center justify-center bg-gradient-to-br from-aura-100 to-brand-50 dark:from-aura-900/60 dark:to-brand-800/25 border border-aura-200/70 dark:border-aura-700/40 shadow-lg shadow-aura-500/15">
+						<svg class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="url(#xsGrad)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z" />
+							<path d="M14 3v5h5" />
+							<path d="M9 13h6M9 17h4" />
+						</svg>
+					</div>
+					<h2 id="sponsored-title" class="font-display text-xl font-semibold tracking-[-0.01em] text-ink-900 dark:text-white">Sponsored Results</h2>
+					<p class="mt-2 text-sm leading-relaxed text-ink-500 dark:text-ink-400">
+						Sponsored results are promoted listings from advertisers that pay to appear priorly in XSearch. When enabled, a sponsored result may appear at the top of your search results.
+					</p>
+					<div class="mt-6 flex flex-col gap-2">
+						<button
+							type="button"
+							onclick="confirmSponsored(true)"
+							class="w-full py-2.5 bg-aura-600 hover:bg-aura-700 text-white text-sm font-medium rounded-xl shadow-sm shadow-aura-500/25 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-aura-500/50"
+						>
+							Turn On
+						</button>
+						<button
+							type="button"
+							onclick="confirmSponsored(false)"
+							class="w-full py-2.5 bg-ink-100 dark:bg-ink-800 hover:bg-ink-200 dark:hover:bg-ink-700 text-ink-700 dark:text-ink-200 text-sm font-medium rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-400/50"
+						>
+							Cancel
+						</button>
+					</div>
+				</div>
 			</div>
 		</div>
 		<script>
@@ -691,8 +805,11 @@
 			let acIndex = -1;
 			let acItemsCache = [];
 			let aiRequestSeq = 0;
+			const SETTINGS_KEY = "xsearch_settings";
+			const settings = { aiOverview: true, sponsored: false };
 			document.addEventListener("DOMContentLoaded", () => {
 				initTheme();
+				initSettings();
 				renderRecentSearches();
 				checkUrlQuery();
 				setupSpeechRecognition();
@@ -715,7 +832,7 @@
 					}
 					if (e.key === "Escape") {
 						closeLightbox();
-						closeAbout();
+						closeModal(document.getElementById("sponsored-modal").classList.contains("xs-open") ? "sponsored-modal" : "settings-modal");
 						hideAllAc();
 					}
 				});
@@ -955,8 +1072,13 @@
 						(a, b) => (typeof b.score === "number" ? b.score : 0) - (typeof a.score === "number" ? a.score : 0),
 					);
 					const ordered = promoteOfficialResults(query, sorted);
-					renderResults(ordered, data.images || []);
-					if (shouldShowAiOverview(query)) fetchAiOverview(query, ordered, aiToken);
+					const sponsored = settings.sponsored ? getSponsoredResult(ordered) : null;
+					renderResults(
+						sponsored ? [sponsored, ...ordered.filter((r) => r !== sponsored)] : ordered,
+						data.images || [],
+						sponsored,
+					);
+					if (settings.aiOverview && shouldShowAiOverview(query)) fetchAiOverview(query, ordered, aiToken);
 					const related = data.related || data.related_searches || data.suggestions;
 					if (Array.isArray(related) && related.length) {
 						const box = document.getElementById("related-searches");
@@ -982,15 +1104,16 @@
 					document.getElementById("error-state").classList.remove("hidden");
 				}
 			}
-			function renderResults(results, images) {
+			function renderResults(results, images, sponsored) {
 				const container = document.getElementById("results-list");
 				container.innerHTML = "";
 				results.forEach((item, index) => {
 					const domain = getDomain(item.url);
 					const favicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32`;
 					const row = document.createElement("div");
-					row.className = "result-row";
-					row.innerHTML = `
+					const isAd = item === sponsored;
+					row.className = "result-row" + (isAd ? " is-sponsored" : "");
+					row.innerHTML = `${isAd ? '<span class="inline-block mb-2 px-1.5 py-0.5 text-[11px] font-semibold rounded-md text-aura-700 dark:text-aura-300 bg-aura-100/60 dark:bg-aura-900/40 border border-aura-200/70 dark:border-aura-700/50">Sponsored</span>' : ""}
         <div class="flex items-center gap-2 mb-1.5">
           <img src="${favicon}" alt="" class="w-4 h-4 rounded-sm object-contain bg-ink-100 dark:bg-ink-800" onerror="this.style.display='none'"/>
           <span class="text-xs font-medium text-ink-600 dark:text-ink-400 line-clamp-1">${escapeHtml(domain)}</span>
@@ -1006,6 +1129,10 @@
 						if (imgSection) container.appendChild(imgSection);
 					}
 				});
+			}
+			// TESTING ONLY: randomly picks one organic result. Replace with a real ad API later.
+			function getSponsoredResult(results) {
+				return results.length ? results[Math.floor(Math.random() * results.length)] : null;
 			}
 			function promoteOfficialResults(query, results) {
 				const q = query.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -1084,12 +1211,48 @@
 				document.getElementById("lightbox").classList.add("hidden");
 				document.getElementById("lightbox-img").src = "";
 			}
-			function openAbout() {
-				document.getElementById("about-modal").classList.remove("hidden");
+			function openModal(id) {
+				const m = document.getElementById(id);
+				clearTimeout(m._t);
+				m.classList.remove("hidden");
+				requestAnimationFrame(() => requestAnimationFrame(() => m.classList.add("xs-open")));
 			}
-			function closeAbout(e) {
-				if (e && e.target !== e.currentTarget && e.type === "click") return;
-				document.getElementById("about-modal").classList.add("hidden");
+			function closeModal(id) {
+				const m = document.getElementById(id);
+				m.classList.remove("xs-open");
+				m._t = setTimeout(() => m.classList.add("hidden"), 250);
+			}
+			// ---------- settings ----------
+			function initSettings() {
+				try {
+					const s = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+					settings.aiOverview = s.aiOverview !== false;
+					settings.sponsored = s.sponsored === true;
+				} catch (e) {}
+				renderSettings();
+			}
+			function renderSettings() {
+				document.querySelectorAll("[data-setting]").forEach((el) => el.setAttribute("aria-checked", settings[el.dataset.setting]));
+			}
+			function setSetting(key, value) {
+				settings[key] = value;
+				try {
+					localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+				} catch (e) {}
+				renderSettings();
+			}
+			function toggleSetting(key) {
+				// Sponsored Results always asks for confirmation before turning ON
+				if (key === "sponsored" && !settings.sponsored) return openModal("sponsored-modal");
+				setSetting(key, !settings[key]);
+				if (key === "aiOverview" && !settings.aiOverview) {
+					aiRequestSeq++;
+					document.getElementById("ai-overview").classList.add("hidden");
+				}
+			}
+			function confirmSponsored(ok) {
+				closeModal("sponsored-modal");
+				if (ok) setSetting("sponsored", true);
 			}
 			// ---------- AI Overview & Citation Parsing ----------
 			function shouldShowAiOverview(query) {
