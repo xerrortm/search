@@ -1136,40 +1136,49 @@
 					}
 				}
 			}
-			function renderAiTextWithCitations(rawText) {
-				if (!rawText) return "";
-				const citationRegex = /\[([^\]|]*)\|([^\]]*)\]/g;
-				let resultHtml = "";
-				let lastIndex = 0;
-				let match;
-				while ((match = citationRegex.exec(rawText)) !== null) {
-					const matchIndex = match.index;
-					const fullMatch = match[0];
-					const sourceName = match[1].trim();
-					const rawUrl = match[2].trim();
-					// Safely append preceding unescaped text
-					const textBefore = rawText.substring(lastIndex, matchIndex);
-					resultHtml += escapeHtml(textBefore);
-					// Validate URL scheme (must be http or https to prevent javascript: XSS)
-					let safeUrl = null;
-					if (/^https?:\/\//i.test(rawUrl)) {
-						safeUrl = rawUrl;
-					}
-					if (safeUrl && sourceName) {
-						const escapedName = escapeHtml(sourceName);
-						const escapedUrl = escapeHtml(safeUrl);
-						resultHtml += `<a href="${escapedUrl}" target="_blank" rel="noopener noreferrer" aria-label="Source: ${escapedName}" title="Source: ${escapedName}" class="ai-citation-chip px-1.5 py-0.5 mx-0.5 text-[0.72rem] font-medium leading-none text-aura-700 dark:text-aura-300 bg-aura-100/60 dark:bg-aura-900/40 hover:bg-aura-100 dark:hover:bg-aura-900/70 border border-aura-200/70 dark:border-aura-700/50 rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-aura-500/40 whitespace-nowrap">${escapedName}</a>`;
-					} else {
-						// Fallback for malformed or unsafe URLs
-						resultHtml += escapeHtml(fullMatch);
-					}
-					lastIndex = citationRegex.lastIndex;
-				}
-				if (lastIndex < rawText.length) {
-					resultHtml += escapeHtml(rawText.substring(lastIndex));
-				}
-				return resultHtml.replace(/\n\n/g, "<br/><br/>").replace(/\n/g, "<br/>");
-			}
+			function renderAiTextWithCitations(rawText){
+  if (!rawText) return '';
+
+  const citationRegex = /\[([^\]|]*)\|([^\]]*)\]/g;
+  let resultHtml = '';
+  let lastIndex = 0;
+  let match;
+
+  while ((match = citationRegex.exec(rawText)) !== null) {
+    resultHtml += formatAiText(rawText.substring(lastIndex, match.index));
+
+    const sourceName = match[1].trim();
+    const rawUrl = match[2].trim();
+
+    if (/^https?:\/\//i.test(rawUrl) && sourceName) {
+      resultHtml += `
+        <a href="${escapeHtml(rawUrl)}" target="_blank" rel="noopener noreferrer"
+          class="ai-citation-chip px-1.5 py-0.5 mx-0.5 text-[0.72rem] font-medium
+          leading-none text-aura-700 dark:text-aura-300 bg-aura-100/60
+          dark:bg-aura-900/40 hover:bg-aura-100 dark:hover:bg-aura-900/70
+          border border-aura-200/70 dark:border-aura-700/50 rounded-md
+          transition-colors duration-150 whitespace-nowrap">
+          ${escapeHtml(sourceName)}
+        </a>`;
+    } else {
+      resultHtml += escapeHtml(match[0]);
+    }
+
+    lastIndex = citationRegex.lastIndex;
+  }
+
+  resultHtml += formatAiText(rawText.substring(lastIndex));
+
+  return resultHtml
+    .replace(/\n\n/g, '<br/><br/>')
+    .replace(/\n/g, '<br/>');
+}
+
+function formatAiText(text){
+  return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, (_, content) =>
+    `<strong class="font-semibold text-aura-600 dark:text-aura-400">${content}</strong>`
+  );
+}
 			function getDomain(urlString) {
 				try {
 					return new URL(urlString).hostname.replace(/^www\./, "");
