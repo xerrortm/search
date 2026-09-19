@@ -1,602 +1,996 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>XSearch</title>
-<meta name="theme-color" content="#FBFAF7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101012" media="(prefers-color-scheme: dark)">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23D97706'/%3E%3Cstop offset='1' stop-color='%238B5CF6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='12' cy='12' r='6.4' fill='none' stroke='url(%23g)' stroke-width='1.8'/%3E%3Ccircle cx='12' cy='12' r='1.5' fill='url(%23g)'/%3E%3Cpath stroke='url(%23g)' stroke-width='1.8' stroke-linecap='round' d='M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    darkMode: 'class',
-    theme: {
-      extend: {
-        fontFamily: { sans: ['Inter', 'sans-serif'], display: ['"Space Grotesk"', 'sans-serif'] },
-        colors: {
-          ink: {
-            50:'#FAFAFA',100:'#F4F4F5',200:'#E4E4E7',300:'#D4D4D8',
-            400:'#A1A1AA',500:'#71717A',600:'#52525B',700:'#3F3F46',
-            800:'#27272A',900:'#18181B',950:'#101012'
-          },
-          brand: {
-            50:'#FFFBEB',100:'#FEF3C7',200:'#FDE68A',300:'#FCD34D',
-            400:'#F59E0B',500:'#D97706',600:'#B45309',700:'#92400E',800:'#78350F'
-          },
-          aura: {
-            50:'#F5F3FF',100:'#EDE9FE',200:'#DDD6FE',300:'#C4B5FD',
-            400:'#A78BFA',500:'#8B5CF6',600:'#7C3AED',700:'#6D28D9',900:'#2E1065'
-          }
-        },
-        keyframes: {
-          heroIn: {
-            '0%': { opacity: 0, transform: 'translateY(8px)' },
-            '100%': { opacity: 1, transform: 'translateY(0)' }
-          },
-          popIn: {
-            '0%': { opacity: 0, transform: 'translateY(-4px)' },
-            '100%': { opacity: 1, transform: 'translateY(0)' }
-          },
-          shimmer: {
-            '0%': { backgroundPosition: '-200% 0' },
-            '100%': { backgroundPosition: '200% 0' }
-          }
-        },
-        animation: {
-          heroIn: 'heroIn .6s cubic-bezier(.16,1,.3,1) both',
-          popIn: 'popIn .15s ease-out both',
-          shimmer: 'shimmer 1.6s linear infinite'
-        }
-      }
-    }
-  }
-</script>
-<style>
-  :root{
-    --xs-brand: #D97706;
-    --xs-aura: #8B5CF6;
-    --glow-a: rgba(217,119,6,.10);
-    --glow-b: rgba(139,92,246,.10);
-  }
-  .dark{
-    --xs-brand: #F59E0B;
-    --xs-aura: #A78BFA;
-    --glow-a: rgba(245,158,11,.14);
-    --glow-b: rgba(167,139,250,.13);
-  }
-  body{ font-family:'Inter',sans-serif; }
-  ::-webkit-scrollbar{ width:8px; height:8px; }
-  ::-webkit-scrollbar-track{ background:transparent; }
-  ::-webkit-scrollbar-thumb{ background:#D4D4D8; border-radius:9999px; }
-  .dark ::-webkit-scrollbar-thumb{ background:#3F3F46; }
-
-  .transition-theme{ transition: background-color .25s ease, color .25s ease, border-color .25s ease; }
-  .line-clamp-2{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-  .line-clamp-1{ display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
-
-  .bg-glow{
-    background:
-      radial-gradient(46% 40% at 50% 30%, var(--glow-a), transparent 72%),
-      radial-gradient(34% 30% at 72% 62%, var(--glow-b), transparent 72%);
-  }
-
-  /* faint signal-grid texture behind the hero */
-  .xs-grid{
-    background-image: radial-gradient(rgba(0,0,0,.055) 1px, transparent 1px);
-    background-size: 24px 24px;
-    -webkit-mask-image: radial-gradient(ellipse 55% 48% at 50% 36%, #000 0%, transparent 72%);
-    mask-image: radial-gradient(ellipse 55% 48% at 50% 36%, #000 0%, transparent 72%);
-  }
-  .dark .xs-grid{ background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px); }
-
-  @media (prefers-reduced-motion: reduce){
-    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
-  }
-
-  /* ---- signature search bar ---- */
-  .xs-searchbar{ position:relative; }
-  .xs-searchbar::after{
-    content:'';
-    position:absolute; left:18px; right:18px; bottom:0; height:2px;
-    background:linear-gradient(90deg, var(--xs-brand), var(--xs-aura));
-    border-radius:2px; transform:scaleX(0); transform-origin:center;
-    transition:transform .3s cubic-bezier(.16,1,.3,1);
-    pointer-events:none;
-  }
-  .xs-searchbar:focus-within::after{ transform:scaleX(1); }
-  .xs-searchbar:focus-within{ box-shadow: 0 0 0 4px rgba(217,119,6,.10), 0 10px 30px -12px rgba(24,24,27,.18); }
-  .dark .xs-searchbar:focus-within{ box-shadow: 0 0 0 4px rgba(245,158,11,.12), 0 10px 30px -12px rgba(0,0,0,.5); }
-
-  /* result rows: flat list, generous breathing room */
-  .result-row{ padding: 18px 6px; border-bottom: 1px solid transparent; border-radius: 10px; }
-  .result-row:not(:last-child){ border-color: rgb(228 228 231 / .8); }
-  .dark .result-row:not(:last-child){ border-color: rgb(39 39 42 / .9); }
-  .result-row:hover{ background: rgb(113 113 122 / .06); }
-  .dark .result-row:hover{ background: rgb(255 255 255 / .035); }
-
-  /* autocomplete dropdown */
-  .ac-panel{ animation: popIn .14s ease-out both; }
-  .ac-item.active, .ac-item:hover{ background: rgb(113 113 122 / .08); }
-  .dark .ac-item.active, .dark .ac-item:hover{ background: rgb(255 255 255 / .05); }
-
-  /* lightbox */
-  #lightbox{ backdrop-filter: blur(8px); }
-
-  .scrollbar-thin::-webkit-scrollbar{ height:6px; }
-
-  /* inline AI citation chip */
-  .ai-citation-chip{ display:inline-flex; align-items:center; vertical-align:baseline; }
-
-  .xs-skel{
-    background: linear-gradient(90deg, rgb(228 228 231 / .6) 25%, rgb(228 228 231 / .95) 37%, rgb(228 228 231 / .6) 63%);
-    background-size: 400% 100%;
-    animation: shimmer 1.6s ease-in-out infinite;
-  }
-  .dark .xs-skel{
-    background: linear-gradient(90deg, rgb(39 39 42 / .6) 25%, rgb(63 63 70 / .8) 37%, rgb(39 39 42 / .6) 63%);
-    background-size: 400% 100%;
-  }
-</style>
-</head>
-<body class="h-full bg-[#FBFAF7] dark:bg-ink-950 text-ink-900 dark:text-ink-100 transition-theme flex flex-col min-h-screen">
-
-  <!-- shared gradient def for the XSearch mark -->
-  <svg width="0" height="0" class="absolute" aria-hidden="true">
-    <defs>
-      <linearGradient id="xsGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="var(--xs-brand)" />
-        <stop offset="1" stop-color="var(--xs-aura)" />
-      </linearGradient>
-    </defs>
-  </svg>
-
-  <header class="w-full px-4 sm:px-8 py-4 flex items-center justify-between z-20">
-    <a href="#" onclick="resetToHome(event)" class="flex items-center gap-2.5 focus:outline-none rounded-lg">
-      <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="6.4" stroke="url(#xsGrad)" stroke-width="1.8"/>
-        <circle cx="12" cy="12" r="1.5" fill="url(#xsGrad)"/>
-        <path stroke="url(#xsGrad)" stroke-width="1.8" stroke-linecap="round" d="M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6"/>
-      </svg>
-      <span class="font-display text-[1.15rem] font-semibold tracking-[-0.01em] text-ink-900 dark:text-white">XSearch</span>
-    </a>
-    <div class="flex items-center gap-1">
-      <button onclick="openAbout()" type="button" aria-label="About XSearch"
-        class="p-2.5 rounded-xl text-ink-400 hover:text-ink-600 dark:text-ink-500 dark:hover:text-ink-300 hover:bg-ink-900/5 dark:hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition-colors">
-        <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 11v5m0-8h.01"/></svg>
-      </button>
-      <button id="theme-toggle" onclick="toggleTheme()" type="button" aria-label="Toggle light and dark mode"
-        class="p-2.5 rounded-xl text-ink-500 dark:text-ink-300 hover:bg-ink-900/5 dark:hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition-colors">
-        <svg id="sun-icon" class="w-[18px] h-[18px] hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-        <svg id="moon-icon" class="w-[18px] h-[18px] hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-      </button>
-    </div>
-  </header>
-
-  <main class="flex-1 flex flex-col items-center w-full px-4 sm:px-6">
-
-    <!-- HERO / HOMEPAGE -->
-    <div id="hero-view" class="relative flex-1 flex flex-col items-center justify-center w-full max-w-xl py-12 my-auto">
-      <div class="xs-grid absolute inset-0 -z-10" aria-hidden="true"></div>
-      <div class="bg-glow absolute inset-0 -z-10" aria-hidden="true"></div>
-      <div class="w-full flex flex-col items-center animate-heroIn">
-        <div class="text-center mb-8 flex flex-col items-center">
-          <div class="flex items-center gap-2.5 mb-3">
-            <svg class="w-9 h-9 sm:w-10 sm:h-10 shrink-0" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="6.4" stroke="url(#xsGrad)" stroke-width="1.5"/>
-              <circle cx="12" cy="12" r="1.5" fill="url(#xsGrad)"/>
-              <path stroke="url(#xsGrad)" stroke-width="1.5" stroke-linecap="round" d="M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6"/>
-            </svg>
-            <h1 class="font-display text-[2.5rem] sm:text-[2.9rem] font-semibold tracking-[-0.02em] leading-none text-ink-900 dark:text-white">XSearch</h1>
-          </div>
-          <p class="text-ink-500 dark:text-ink-400 text-[0.95rem]">Search the web with real-time speed and precision.</p>
-        </div>
-
-        <div class="w-full relative" id="hero-search-wrap">
-          <form onsubmit="handleSearch(event, 'hero')" class="xs-searchbar relative flex items-center bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-[0_1px_2px_rgba(24,24,27,0.05)] transition-shadow duration-150" autocomplete="off">
-            <div class="pl-5 pr-2 text-ink-400 dark:text-ink-500">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </div>
-            <input type="text" id="hero-search-input" placeholder="Search anything…" autocomplete="off" autofocus
-              oninput="handleInputChange('hero')" onkeydown="handleAcKeydown(event,'hero')" onfocus="renderAutocomplete('hero')"
-              class="flex-1 min-w-0 py-4 pr-2 text-[1.05rem] bg-transparent text-ink-900 dark:text-ink-100 placeholder-ink-400 dark:placeholder-ink-500 focus:outline-none"/>
-            <div class="flex items-center gap-1 pr-3">
-              <kbd class="hidden sm:inline-flex items-center px-1.5 py-1 text-[10px] font-medium text-ink-400 dark:text-ink-500 bg-ink-100 dark:bg-ink-800/70 border border-ink-200 dark:border-ink-700/60 rounded-md">/</kbd>
-              <button type="button" onclick="clearInput('hero')" id="hero-clear-btn" title="Clear" class="hidden p-2 text-ink-400 hover:text-ink-700 dark:hover:text-ink-200 rounded-lg transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-              </button>
-              <button type="button" onclick="toggleVoiceSearch('hero')" id="hero-mic-btn" title="Search with voice" class="p-2 text-ink-400 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl hover:bg-ink-900/5 dark:hover:bg-white/5 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
-              </button>
-              <button type="submit" title="Search" class="p-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-sm shadow-brand-500/25 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/40">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-              </button>
-            </div>
-          </form>
-          <div id="hero-ac-panel" class="hidden ac-panel absolute left-0 right-0 mt-2 bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-lg shadow-ink-900/5 overflow-hidden z-30"></div>
-        </div>
-
-        <div class="flex items-center gap-2.5 mt-5 text-[11px] text-ink-400 dark:text-ink-500">
-          <span>No tracking</span>
-          <span class="w-1 h-1 rounded-full bg-ink-300 dark:bg-ink-700"></span>
-          <span>Real-time results</span>
-          <span class="w-1 h-1 rounded-full bg-ink-300 dark:bg-ink-700"></span>
-          <span>AI overview</span>
-        </div>
-
-        <div id="recent-searches-container" class="w-full mt-7 hidden">
-          <div class="flex items-start gap-2.5 text-xs px-0.5 border-t border-ink-200/70 dark:border-ink-800/70 pt-4">
-            <span class="flex items-center gap-1.5 text-ink-400 dark:text-ink-500 shrink-0 pt-0.5">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              Recent
-            </span>
-            <div id="recent-searches-list" class="flex-1 flex flex-wrap items-center gap-x-1 gap-y-1.5"></div>
-            <button type="button" onclick="clearRecentSearches()" class="shrink-0 text-ink-300 hover:text-red-500 dark:text-ink-600 dark:hover:text-red-400 transition-colors focus:outline-none">Clear</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RESULTS VIEW -->
-    <div id="results-view" class="hidden w-full max-w-3xl py-4">
-      <div class="sticky top-0 z-10 bg-[#FBFAF7]/90 dark:bg-ink-950/90 backdrop-blur-md pt-2 pb-3">
-        <div class="relative flex items-center max-w-xl" id="top-search-wrap">
-          <form onsubmit="handleSearch(event, 'top')" class="xs-searchbar relative flex items-center w-full bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-xl shadow-sm transition-shadow duration-150" autocomplete="off">
-            <div class="pl-4 pr-1.5 text-ink-400 dark:text-ink-500">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </div>
-            <input type="text" id="top-search-input" placeholder="Search anything…" autocomplete="off"
-              oninput="handleInputChange('top')" onkeydown="handleAcKeydown(event,'top')" onfocus="renderAutocomplete('top')"
-              class="flex-1 min-w-0 py-2.5 text-sm bg-transparent text-ink-900 dark:text-ink-100 placeholder-ink-400 focus:outline-none"/>
-            <div class="flex items-center gap-0.5 pr-2">
-              <kbd class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-ink-400 dark:text-ink-500 bg-ink-100 dark:bg-ink-800/70 border border-ink-200 dark:border-ink-700/60 rounded-md mr-0.5">/</kbd>
-              <button type="button" onclick="clearInput('top')" id="top-clear-btn" title="Clear" class="hidden p-1.5 text-ink-400 hover:text-ink-700 dark:hover:text-ink-200 rounded-lg transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-              </button>
-              <button type="button" onclick="toggleVoiceSearch('top')" id="top-mic-btn" title="Voice search" class="p-1.5 text-ink-400 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
-              </button>
-              <button type="submit" title="Search" class="p-1.5 text-brand-600 hover:text-brand-700 dark:text-brand-400 rounded-lg transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-              </button>
-            </div>
-          </form>
-          <div id="top-ac-panel" class="hidden ac-panel absolute left-0 right-0 top-full mt-2 max-w-xl bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-lg shadow-ink-900/5 overflow-hidden z-30"></div>
-        </div>
-      </div>
-
-      <div id="results-meta" class="text-[13px] text-ink-400 dark:text-ink-500 px-1 pb-1 hidden"></div>
-      <div id="didyoumean" class="text-sm px-1 pb-3 hidden"></div>
-
-      <div id="loading-state" class="hidden space-y-6 pt-3">
-        <div class="space-y-2"><div class="h-3 xs-skel rounded w-1/4"></div><div class="h-4 xs-skel rounded w-1/2"></div><div class="h-3 xs-skel rounded w-full"></div><div class="h-3 xs-skel rounded w-5/6"></div></div>
-        <div class="space-y-2"><div class="h-3 xs-skel rounded w-1/3"></div><div class="h-4 xs-skel rounded w-2/5"></div><div class="h-3 xs-skel rounded w-full"></div><div class="h-3 xs-skel rounded w-3/4"></div></div>
-        <div class="space-y-2"><div class="h-3 xs-skel rounded w-1/5"></div><div class="h-4 xs-skel rounded w-1/2"></div><div class="h-3 xs-skel rounded w-11/12"></div></div>
-      </div>
-
-      <div id="error-state" class="hidden p-8 text-center space-y-3">
-        <div class="w-11 h-11 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-        </div>
-        <h3 class="text-base font-semibold text-ink-800 dark:text-ink-100">Search didn't go through</h3>
-        <p class="text-sm text-ink-500 dark:text-ink-400 max-w-sm mx-auto" id="error-message">Couldn't reach the search service. Check your connection and try again.</p>
-        <button onclick="retrySearch()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-medium rounded-xl transition-colors">Try again</button>
-      </div>
-
-      <div id="empty-state" class="hidden p-10 text-center space-y-2 max-w-sm mx-auto">
-        <div class="w-14 h-14 bg-ink-100 dark:bg-ink-900 text-ink-400 rounded-full flex items-center justify-center mx-auto">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        </div>
-        <h3 class="text-base font-semibold text-ink-800 dark:text-ink-200">No results found</h3>
-        <p class="text-sm text-ink-500 dark:text-ink-400">Try different keywords or check for typos.</p>
-      </div>
-
-      <div id="ai-overview" class="hidden relative mb-6 pl-4 pr-4 py-3.5 rounded-xl bg-ink-900/[0.02] dark:bg-white/[0.03] border border-ink-200/70 dark:border-ink-800/70 overflow-hidden">
-        <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-aura-400 to-aura-600"></div>
-        <div class="flex items-center gap-1.5 mb-2">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="6.4" stroke="url(#xsGrad)" stroke-width="2"/><circle cx="12" cy="12" r="1.5" fill="url(#xsGrad)"/></svg>
-          <span class="text-xs font-semibold text-aura-700 dark:text-aura-300 tracking-tight">AI Overview</span>
-        </div>
-        <div id="ai-overview-body" class="text-[0.9rem] text-ink-700 dark:text-ink-200 leading-relaxed"></div>
-        <p class="mt-2.5 text-[11px] text-ink-400 dark:text-ink-600">Based on XSearch results</p>
-      </div>
-
-      <div id="results-list"></div>
-      <div id="related-searches" class="hidden mt-6 pt-5 border-t border-ink-200 dark:border-ink-800"></div>
-    </div>
-  </main>
-
-  <!-- back to top -->
-  <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"
-    class="hidden fixed bottom-6 right-6 p-3 bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 text-ink-500 dark:text-ink-300 rounded-full shadow-lg hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-300 dark:hover:border-brand-700 transition-colors z-30">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
-  </button>
-
-  <!-- lightbox -->
-  <div id="lightbox" class="hidden fixed inset-0 bg-ink-950/75 z-40 flex items-center justify-center p-6" onclick="closeLightbox(event)">
-    <div class="relative max-w-3xl w-full flex flex-col items-center gap-3" onclick="event.stopPropagation()">
-      <img id="lightbox-img" src="" alt="" class="max-h-[75vh] max-w-full rounded-xl shadow-2xl object-contain"/>
-      <div class="flex items-center gap-3">
-        <a id="lightbox-link" href="#" target="_blank" rel="noopener noreferrer" class="text-xs px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">Visit source</a>
-        <button onclick="closeLightbox()" class="text-xs px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- about modal -->
-  <div id="about-modal" class="hidden fixed inset-0 bg-ink-950/50 z-40 flex items-center justify-center p-6" onclick="closeAbout(event)">
-    <div class="bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-xl max-w-sm w-full p-6" onclick="event.stopPropagation()">
-      <div class="flex items-center gap-2 mb-3">
-        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="6.4" stroke="url(#xsGrad)" stroke-width="1.8"/>
-          <circle cx="12" cy="12" r="1.5" fill="url(#xsGrad)"/>
-          <path stroke="url(#xsGrad)" stroke-width="1.8" stroke-linecap="round" d="M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6"/>
-        </svg>
-        <span class="font-display text-base font-semibold">XSearch</span>
-      </div>
-      <p class="text-sm text-ink-500 dark:text-ink-400 leading-relaxed">XSearch is a fast, modern search engine designed to make exploring the web simple, intuitive, and effortless.</p>
-      <button onclick="closeAbout()" class="mt-4 w-full py-2 bg-ink-100 dark:bg-ink-800 hover:bg-ink-200 dark:hover:bg-ink-700 text-ink-700 dark:text-ink-200 text-sm font-medium rounded-xl transition-colors">Close</button>
-    </div>
-  </div>
-
-<script>
-  const API_ENDPOINT = 'https://search.xerrortm.workers.dev/search?q=';
-  const AI_ENDPOINT = 'https://search.xerrortm.workers.dev/ai';
-  const RECENT_KEY = 'xsearch_recent_searches';
-  let currentQuery = '';
-  let isListening = false;
-  let recognition = null;
-  let acIndex = -1;
-  let acItemsCache = [];
-  let aiRequestSeq = 0;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-    renderRecentSearches();
-    checkUrlQuery();
-    setupSpeechRecognition();
-    setupKeyboardShortcuts();
-    setupGlobalDismiss();
-    window.addEventListener('scroll', () => {
-      document.getElementById('back-to-top').classList.toggle('hidden', window.scrollY < 400);
-    });
-  });
-
-  function setupKeyboardShortcuts(){
-    document.addEventListener('keydown', (e) => {
-      const activeTag = document.activeElement?.tagName?.toLowerCase();
-      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && activeTag !== 'input')) {
-        e.preventDefault();
-        const target = document.getElementById('hero-view').classList.contains('hidden')
-          ? document.getElementById('top-search-input') : document.getElementById('hero-search-input');
-        target?.focus(); target?.select();
-      }
-      if (e.key === 'Escape') { closeLightbox(); closeAbout(); hideAllAc(); }
-    });
-  }
-
-  function setupGlobalDismiss(){
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('#hero-search-wrap')) hideAc('hero');
-      if (!e.target.closest('#top-search-wrap')) hideAc('top');
-    });
-  }
-
-  // ---------- storage ----------
-  function getRecentSearches(){
-    try { const s = localStorage.getItem(RECENT_KEY); const p = s ? JSON.parse(s) : []; return Array.isArray(p) ? p : []; }
-    catch(e){ return []; }
-  }
-  function saveRecentSearch(query){
-    if (!query || !query.trim()) return;
-    const clean = query.trim();
-    try {
-      let searches = getRecentSearches().filter(q => q.toLowerCase() !== clean.toLowerCase());
-      searches.unshift(clean);
-      localStorage.setItem(RECENT_KEY, JSON.stringify(searches.slice(0, 8)));
-      renderRecentSearches();
-    } catch(e){}
-  }
-  function clearRecentSearches(){
-    try { localStorage.removeItem(RECENT_KEY); renderRecentSearches(); } catch(e){}
-  }
-  function renderRecentSearches(){
-    const container = document.getElementById('recent-searches-container');
-    const list = document.getElementById('recent-searches-list');
-    const searches = getRecentSearches();
-    if (!searches.length){ container.classList.add('hidden'); list.innerHTML=''; return; }
-    container.classList.remove('hidden');
-    list.innerHTML = searches.map((s, i) => `
-      ${i > 0 ? '<span class="text-ink-300 dark:text-ink-700 text-xs px-0.5">·</span>' : ''}
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>XSearch</title>
+		<meta name="theme-color" content="#FBFAF7" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#101012" media="(prefers-color-scheme: dark)" />
+		<link
+			rel="icon"
+			href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23D97706'/%3E%3Cstop offset='1' stop-color='%238B5CF6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='12' cy='12' r='6.4' fill='none' stroke='url(%23g)' stroke-width='1.8'/%3E%3Ccircle cx='12' cy='12' r='1.5' fill='url(%23g)'/%3E%3Cpath stroke='url(%23g)' stroke-width='1.8' stroke-linecap='round' d='M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6'/%3E%3C/svg%3E"
+		/>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script>
+			tailwind.config = {
+				darkMode: "class",
+				theme: {
+					extend: {
+						fontFamily: { sans: ["Inter", "sans-serif"], display: ['"Space Grotesk"', "sans-serif"] },
+						colors: {
+							ink: {
+								50: "#FAFAFA",
+								100: "#F4F4F5",
+								200: "#E4E4E7",
+								300: "#D4D4D8",
+								400: "#A1A1AA",
+								500: "#71717A",
+								600: "#52525B",
+								700: "#3F3F46",
+								800: "#27272A",
+								900: "#18181B",
+								950: "#101012",
+							},
+							brand: {
+								50: "#FFFBEB",
+								100: "#FEF3C7",
+								200: "#FDE68A",
+								300: "#FCD34D",
+								400: "#F59E0B",
+								500: "#D97706",
+								600: "#B45309",
+								700: "#92400E",
+								800: "#78350F",
+							},
+							aura: {
+								50: "#F5F3FF",
+								100: "#EDE9FE",
+								200: "#DDD6FE",
+								300: "#C4B5FD",
+								400: "#A78BFA",
+								500: "#8B5CF6",
+								600: "#7C3AED",
+								700: "#6D28D9",
+								900: "#2E1065",
+							},
+						},
+						keyframes: {
+							heroIn: {
+								"0%": { opacity: 0, transform: "translateY(8px)" },
+								"100%": { opacity: 1, transform: "translateY(0)" },
+							},
+							popIn: {
+								"0%": { opacity: 0, transform: "translateY(-4px)" },
+								"100%": { opacity: 1, transform: "translateY(0)" },
+							},
+							shimmer: {
+								"0%": { backgroundPosition: "-200% 0" },
+								"100%": { backgroundPosition: "200% 0" },
+							},
+						},
+						animation: {
+							heroIn: "heroIn .6s cubic-bezier(.16,1,.3,1) both",
+							popIn: "popIn .15s ease-out both",
+							shimmer: "shimmer 1.6s linear infinite",
+						},
+					},
+				},
+			};
+		</script>
+		<style>
+			:root {
+				--xs-brand: #d97706;
+				--xs-aura: #8b5cf6;
+				--glow-a: rgba(217, 119, 6, 0.1);
+				--glow-b: rgba(139, 92, 246, 0.1);
+			}
+			.dark {
+				--xs-brand: #f59e0b;
+				--xs-aura: #a78bfa;
+				--glow-a: rgba(245, 158, 11, 0.14);
+				--glow-b: rgba(167, 139, 250, 0.13);
+			}
+			body {
+				font-family: "Inter", sans-serif;
+			}
+			::-webkit-scrollbar {
+				width: 8px;
+				height: 8px;
+			}
+			::-webkit-scrollbar-track {
+				background: transparent;
+			}
+			::-webkit-scrollbar-thumb {
+				background: #d4d4d8;
+				border-radius: 9999px;
+			}
+			.dark ::-webkit-scrollbar-thumb {
+				background: #3f3f46;
+			}
+			.transition-theme {
+				transition:
+					background-color 0.25s ease,
+					color 0.25s ease,
+					border-color 0.25s ease;
+			}
+			.line-clamp-2 {
+				display: -webkit-box;
+				-webkit-line-clamp: 2;
+				-webkit-box-orient: vertical;
+				overflow: hidden;
+			}
+			.line-clamp-1 {
+				display: -webkit-box;
+				-webkit-line-clamp: 1;
+				-webkit-box-orient: vertical;
+				overflow: hidden;
+			}
+			.bg-glow {
+				background:
+					radial-gradient(46% 40% at 50% 30%, var(--glow-a), transparent 72%),
+					radial-gradient(34% 30% at 72% 62%, var(--glow-b), transparent 72%);
+			}
+			/* faint signal-grid texture behind the hero */
+			.xs-grid {
+				background-image: radial-gradient(rgba(0, 0, 0, 0.055) 1px, transparent 1px);
+				background-size: 24px 24px;
+				-webkit-mask-image: radial-gradient(ellipse 55% 48% at 50% 36%, #000 0%, transparent 72%);
+				mask-image: radial-gradient(ellipse 55% 48% at 50% 36%, #000 0%, transparent 72%);
+			}
+			.dark .xs-grid {
+				background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+			}
+			@media (prefers-reduced-motion: reduce) {
+				* {
+					animation-duration: 0.001ms !important;
+					animation-iteration-count: 1 !important;
+					transition-duration: 0.001ms !important;
+				}
+			}
+			/* ---- signature search bar ---- */
+			.xs-searchbar {
+				position: relative;
+			}
+			.xs-searchbar::after {
+				content: "";
+				position: absolute;
+				left: 18px;
+				right: 18px;
+				bottom: 0;
+				height: 2px;
+				background: linear-gradient(90deg, var(--xs-brand), var(--xs-aura));
+				border-radius: 2px;
+				transform: scaleX(0);
+				transform-origin: center;
+				transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+				pointer-events: none;
+			}
+			.xs-searchbar:focus-within::after {
+				transform: scaleX(1);
+			}
+			.xs-searchbar:focus-within {
+				box-shadow:
+					0 0 0 4px rgba(217, 119, 6, 0.1),
+					0 10px 30px -12px rgba(24, 24, 27, 0.18);
+			}
+			.dark .xs-searchbar:focus-within {
+				box-shadow:
+					0 0 0 4px rgba(245, 158, 11, 0.12),
+					0 10px 30px -12px rgba(0, 0, 0, 0.5);
+			}
+			/* result rows: flat list, generous breathing room */
+			.result-row {
+				padding: 18px 6px;
+				border-bottom: 1px solid transparent;
+				border-radius: 10px;
+			}
+			.result-row:not(:last-child) {
+				border-color: rgb(228 228 231 / 0.8);
+			}
+			.dark .result-row:not(:last-child) {
+				border-color: rgb(39 39 42 / 0.9);
+			}
+			.result-row:hover {
+				background: rgb(113 113 122 / 0.06);
+			}
+			.dark .result-row:hover {
+				background: rgb(255 255 255 / 0.035);
+			}
+			/* autocomplete dropdown */
+			.ac-panel {
+				animation: popIn 0.14s ease-out both;
+			}
+			.ac-item.active,
+			.ac-item:hover {
+				background: rgb(113 113 122 / 0.08);
+			}
+			.dark .ac-item.active,
+			.dark .ac-item:hover {
+				background: rgb(255 255 255 / 0.05);
+			}
+			/* lightbox */
+			#lightbox {
+				backdrop-filter: blur(8px);
+			}
+			.scrollbar-thin::-webkit-scrollbar {
+				height: 6px;
+			}
+			/* inline AI citation chip */
+			.ai-citation-chip {
+				display: inline-flex;
+				align-items: center;
+				vertical-align: baseline;
+			}
+			.xs-skel {
+				background: linear-gradient(
+					90deg,
+					rgb(228 228 231 / 0.6) 25%,
+					rgb(228 228 231 / 0.95) 37%,
+					rgb(228 228 231 / 0.6) 63%
+				);
+				background-size: 400% 100%;
+				animation: shimmer 1.6s ease-in-out infinite;
+			}
+			.dark .xs-skel {
+				background: linear-gradient(90deg, rgb(39 39 42 / 0.6) 25%, rgb(63 63 70 / 0.8) 37%, rgb(39 39 42 / 0.6) 63%);
+				background-size: 400% 100%;
+			}
+		</style>
+	</head>
+	<body
+		class="h-full bg-[#FBFAF7] dark:bg-ink-950 text-ink-900 dark:text-ink-100 transition-theme flex flex-col min-h-screen"
+	>
+		<!-- shared gradient def for the XSearch mark -->
+		<svg width="0" height="0" class="absolute" aria-hidden="true">
+			<defs>
+				<linearGradient id="xsGrad" x1="0" y1="0" x2="1" y2="1">
+					<stop offset="0" stop-color="var(--xs-brand)" />
+					<stop offset="1" stop-color="var(--xs-aura)" />
+				</linearGradient>
+			</defs>
+		</svg>
+		<header class="w-full px-4 sm:px-8 py-4 flex items-center justify-between z-20">
+			<a href="#" onclick="resetToHome(event)" class="flex items-center gap-2.5 focus:outline-none rounded-lg">
+				<svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none">
+					<circle cx="12" cy="12" r="6.4" stroke="url(#xsGrad)" stroke-width="1.8" />
+					<circle cx="12" cy="12" r="1.5" fill="url(#xsGrad)" />
+					<path
+						stroke="url(#xsGrad)"
+						stroke-width="1.8"
+						stroke-linecap="round"
+						d="M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6"
+					/>
+				</svg>
+				<span class="font-display text-[1.15rem] font-semibold tracking-[-0.01em] text-ink-900 dark:text-white"
+					>XSearch</span
+				>
+			</a>
+			<div class="flex items-center gap-1">
+				<button
+					onclick="openAbout()"
+					type="button"
+					aria-label="About XSearch"
+					class="p-2.5 rounded-xl text-ink-400 hover:text-ink-600 dark:text-ink-500 dark:hover:text-ink-300 hover:bg-ink-900/5 dark:hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition-colors"
+				>
+					<svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<circle cx="12" cy="12" r="9" stroke-width="2" />
+						<path stroke-linecap="round" stroke-width="2" d="M12 11v5m0-8h.01" />
+					</svg>
+				</button>
+				<button
+					id="theme-toggle"
+					onclick="toggleTheme()"
+					type="button"
+					aria-label="Toggle light and dark mode"
+					class="p-2.5 rounded-xl text-ink-500 dark:text-ink-300 hover:bg-ink-900/5 dark:hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition-colors"
+				>
+					<svg id="sun-icon" class="w-[18px] h-[18px] hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+						/>
+					</svg>
+					<svg id="moon-icon" class="w-[18px] h-[18px] hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+						/>
+					</svg>
+				</button>
+			</div>
+		</header>
+		<main class="flex-1 flex flex-col items-center w-full px-4 sm:px-6">
+			<!-- HERO / HOMEPAGE -->
+			<div id="hero-view" class="relative flex-1 flex flex-col items-center justify-center w-full max-w-xl py-12 my-auto">
+				<div class="xs-grid absolute inset-0 -z-10" aria-hidden="true"></div>
+				<div class="bg-glow absolute inset-0 -z-10" aria-hidden="true"></div>
+				<div class="w-full flex flex-col items-center animate-heroIn">
+					<div class="text-center mb-8 flex flex-col items-center">
+						<div class="flex items-center gap-2.5 mb-3">
+							<svg class="w-9 h-9 sm:w-10 sm:h-10 shrink-0" viewBox="0 0 24 24" fill="none">
+								<circle cx="12" cy="12" r="6.4" stroke="url(#xsGrad)" stroke-width="1.5" />
+								<circle cx="12" cy="12" r="1.5" fill="url(#xsGrad)" />
+								<path
+									stroke="url(#xsGrad)"
+									stroke-width="1.5"
+									stroke-linecap="round"
+									d="M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6"
+								/>
+							</svg>
+							<h1
+								class="font-display text-[2.5rem] sm:text-[2.9rem] font-semibold tracking-[-0.02em] leading-none text-ink-900 dark:text-white"
+							>
+								XSearch
+							</h1>
+						</div>
+						<p class="text-ink-500 dark:text-ink-400 text-[0.95rem]">Search the web with real-time speed and precision.</p>
+					</div>
+					<div class="w-full relative" id="hero-search-wrap">
+						<form
+							onsubmit="handleSearch(event, 'hero')"
+							class="xs-searchbar relative flex items-center bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-[0_1px_2px_rgba(24,24,27,0.05)] transition-shadow duration-150"
+							autocomplete="off"
+						>
+							<div class="pl-5 pr-2 text-ink-400 dark:text-ink-500">
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+									/>
+								</svg>
+							</div>
+							<input
+								type="text"
+								id="hero-search-input"
+								placeholder="Search anything…"
+								autocomplete="off"
+								autofocus
+								oninput="handleInputChange('hero')"
+								onkeydown="handleAcKeydown(event,'hero')"
+								onfocus="renderAutocomplete('hero')"
+								class="flex-1 min-w-0 py-4 pr-2 text-[1.05rem] bg-transparent text-ink-900 dark:text-ink-100 placeholder-ink-400 dark:placeholder-ink-500 focus:outline-none"
+							/>
+							<div class="flex items-center gap-1 pr-3">
+								<kbd
+									class="hidden sm:inline-flex items-center px-1.5 py-1 text-[10px] font-medium text-ink-400 dark:text-ink-500 bg-ink-100 dark:bg-ink-800/70 border border-ink-200 dark:border-ink-700/60 rounded-md"
+									>/</kbd
+								>
+								<button
+									type="button"
+									onclick="clearInput('hero')"
+									id="hero-clear-btn"
+									title="Clear"
+									class="hidden p-2 text-ink-400 hover:text-ink-700 dark:hover:text-ink-200 rounded-lg transition-colors"
+								>
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+									</svg>
+								</button>
+								<button
+									type="button"
+									onclick="toggleVoiceSearch('hero')"
+									id="hero-mic-btn"
+									title="Search with voice"
+									class="p-2 text-ink-400 hover:text-brand-600 dark:hover:text-brand-400 rounded-xl hover:bg-ink-900/5 dark:hover:bg-white/5 transition-colors"
+								>
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+										/>
+									</svg>
+								</button>
+								<button
+									type="submit"
+									title="Search"
+									class="p-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-sm shadow-brand-500/25 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+								>
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+										/>
+									</svg>
+								</button>
+							</div>
+						</form>
+						<div
+							id="hero-ac-panel"
+							class="hidden ac-panel absolute left-0 right-0 mt-2 bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-lg shadow-ink-900/5 overflow-hidden z-30"
+						></div>
+					</div>
+					<div class="flex items-center gap-2.5 mt-5 text-[11px] text-ink-400 dark:text-ink-500">
+						<span>No tracking</span>
+						<span class="w-1 h-1 rounded-full bg-ink-300 dark:bg-ink-700"></span>
+						<span>Real-time results</span>
+						<span class="w-1 h-1 rounded-full bg-ink-300 dark:bg-ink-700"></span>
+						<span>AI overview</span>
+					</div>
+					<div id="recent-searches-container" class="w-full mt-7 hidden">
+						<div class="flex items-start gap-2.5 text-xs px-0.5 border-t border-ink-200/70 dark:border-ink-800/70 pt-4">
+							<span class="flex items-center gap-1.5 text-ink-400 dark:text-ink-500 shrink-0 pt-0.5">
+								<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								</svg>
+								Recent
+							</span>
+							<div id="recent-searches-list" class="flex-1 flex flex-wrap items-center gap-x-1 gap-y-1.5"></div>
+							<button
+								type="button"
+								onclick="clearRecentSearches()"
+								class="shrink-0 text-ink-300 hover:text-red-500 dark:text-ink-600 dark:hover:text-red-400 transition-colors focus:outline-none"
+							>
+								Clear
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- RESULTS VIEW -->
+			<div id="results-view" class="hidden w-full max-w-3xl py-4">
+				<div class="sticky top-0 z-10 bg-[#FBFAF7]/90 dark:bg-ink-950/90 backdrop-blur-md pt-2 pb-3">
+					<div class="relative flex items-center max-w-xl" id="top-search-wrap">
+						<form
+							onsubmit="handleSearch(event, 'top')"
+							class="xs-searchbar relative flex items-center w-full bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-xl shadow-sm transition-shadow duration-150"
+							autocomplete="off"
+						>
+							<div class="pl-4 pr-1.5 text-ink-400 dark:text-ink-500">
+								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+									/>
+								</svg>
+							</div>
+							<input
+								type="text"
+								id="top-search-input"
+								placeholder="Search anything…"
+								autocomplete="off"
+								oninput="handleInputChange('top')"
+								onkeydown="handleAcKeydown(event,'top')"
+								onfocus="renderAutocomplete('top')"
+								class="flex-1 min-w-0 py-2.5 text-sm bg-transparent text-ink-900 dark:text-ink-100 placeholder-ink-400 focus:outline-none"
+							/>
+							<div class="flex items-center gap-0.5 pr-2">
+								<kbd
+									class="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-ink-400 dark:text-ink-500 bg-ink-100 dark:bg-ink-800/70 border border-ink-200 dark:border-ink-700/60 rounded-md mr-0.5"
+									>/</kbd
+								>
+								<button
+									type="button"
+									onclick="clearInput('top')"
+									id="top-clear-btn"
+									title="Clear"
+									class="hidden p-1.5 text-ink-400 hover:text-ink-700 dark:hover:text-ink-200 rounded-lg transition-colors"
+								>
+									<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+									</svg>
+								</button>
+								<button
+									type="button"
+									onclick="toggleVoiceSearch('top')"
+									id="top-mic-btn"
+									title="Voice search"
+									class="p-1.5 text-ink-400 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg transition-colors"
+								>
+									<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+										/>
+									</svg>
+								</button>
+								<button
+									type="submit"
+									title="Search"
+									class="p-1.5 text-brand-600 hover:text-brand-700 dark:text-brand-400 rounded-lg transition-colors"
+								>
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+										/>
+									</svg>
+								</button>
+							</div>
+						</form>
+						<div
+							id="top-ac-panel"
+							class="hidden ac-panel absolute left-0 right-0 top-full mt-2 max-w-xl bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-lg shadow-ink-900/5 overflow-hidden z-30"
+						></div>
+					</div>
+				</div>
+				<div id="results-meta" class="text-[13px] text-ink-400 dark:text-ink-500 px-1 pb-1 hidden"></div>
+				<div id="didyoumean" class="text-sm px-1 pb-3 hidden"></div>
+				<div id="loading-state" class="hidden space-y-6 pt-3">
+					<div class="space-y-2">
+						<div class="h-3 xs-skel rounded w-1/4"></div>
+						<div class="h-4 xs-skel rounded w-1/2"></div>
+						<div class="h-3 xs-skel rounded w-full"></div>
+						<div class="h-3 xs-skel rounded w-5/6"></div>
+					</div>
+					<div class="space-y-2">
+						<div class="h-3 xs-skel rounded w-1/3"></div>
+						<div class="h-4 xs-skel rounded w-2/5"></div>
+						<div class="h-3 xs-skel rounded w-full"></div>
+						<div class="h-3 xs-skel rounded w-3/4"></div>
+					</div>
+					<div class="space-y-2">
+						<div class="h-3 xs-skel rounded w-1/5"></div>
+						<div class="h-4 xs-skel rounded w-1/2"></div>
+						<div class="h-3 xs-skel rounded w-11/12"></div>
+					</div>
+				</div>
+				<div id="error-state" class="hidden p-8 text-center space-y-3">
+					<div
+						class="w-11 h-11 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto"
+					>
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+							/>
+						</svg>
+					</div>
+					<h3 class="text-base font-semibold text-ink-800 dark:text-ink-100">Search didn't go through</h3>
+					<p class="text-sm text-ink-500 dark:text-ink-400 max-w-sm mx-auto" id="error-message">
+						Couldn't reach the search service. Check your connection and try again.
+					</p>
+					<button
+						onclick="retrySearch()"
+						class="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-medium rounded-xl transition-colors"
+					>
+						Try again
+					</button>
+				</div>
+				<div id="empty-state" class="hidden p-10 text-center space-y-2 max-w-sm mx-auto">
+					<div
+						class="w-14 h-14 bg-ink-100 dark:bg-ink-900 text-ink-400 rounded-full flex items-center justify-center mx-auto"
+					>
+						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+							/>
+						</svg>
+					</div>
+					<h3 class="text-base font-semibold text-ink-800 dark:text-ink-200">No results found</h3>
+					<p class="text-sm text-ink-500 dark:text-ink-400">Try different keywords or check for typos.</p>
+				</div>
+				<div
+					id="ai-overview"
+					class="hidden relative mb-6 pl-4 pr-4 py-3.5 rounded-xl bg-ink-900/[0.02] dark:bg-white/[0.03] border border-ink-200/70 dark:border-ink-800/70 overflow-hidden"
+				>
+					<div class="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-aura-400 to-aura-600"></div>
+					<div class="flex items-center gap-1.5 mb-2">
+						<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+							<circle cx="12" cy="12" r="6.4" stroke="url(#xsGrad)" stroke-width="2" />
+							<circle cx="12" cy="12" r="1.5" fill="url(#xsGrad)" />
+						</svg>
+						<span class="text-xs font-semibold text-aura-700 dark:text-aura-300 tracking-tight">AI Overview</span>
+					</div>
+					<div id="ai-overview-body" class="text-[0.9rem] text-ink-700 dark:text-ink-200 leading-relaxed"></div>
+					<p class="mt-2.5 text-[11px] text-ink-400 dark:text-ink-600">Based on XSearch results</p>
+				</div>
+				<div id="results-list"></div>
+				<div id="related-searches" class="hidden mt-6 pt-5 border-t border-ink-200 dark:border-ink-800"></div>
+			</div>
+		</main>
+		<!-- back to top -->
+		<button
+			id="back-to-top"
+			onclick="window.scrollTo({top:0,behavior:'smooth'})"
+			title="Back to top"
+			class="hidden fixed bottom-6 right-6 p-3 bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 text-ink-500 dark:text-ink-300 rounded-full shadow-lg hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-300 dark:hover:border-brand-700 transition-colors z-30"
+		>
+			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+			</svg>
+		</button>
+		<!-- lightbox -->
+		<div
+			id="lightbox"
+			class="hidden fixed inset-0 bg-ink-950/75 z-40 flex items-center justify-center p-6"
+			onclick="closeLightbox(event)"
+		>
+			<div class="relative max-w-3xl w-full flex flex-col items-center gap-3" onclick="event.stopPropagation()">
+				<img id="lightbox-img" src="" alt="" class="max-h-[75vh] max-w-full rounded-xl shadow-2xl object-contain" />
+				<div class="flex items-center gap-3">
+					<a
+						id="lightbox-link"
+						href="#"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-xs px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+						>Visit source</a
+					>
+					<button
+						onclick="closeLightbox()"
+						class="text-xs px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+					>
+						Close
+					</button>
+				</div>
+			</div>
+		</div>
+		<!-- about modal -->
+		<div
+			id="about-modal"
+			class="hidden fixed inset-0 bg-ink-950/50 z-40 flex items-center justify-center p-6"
+			onclick="closeAbout(event)"
+		>
+			<div
+				class="bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-2xl shadow-xl max-w-sm w-full p-6"
+				onclick="event.stopPropagation()"
+			>
+				<div class="flex items-center gap-2 mb-3">
+					<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+						<circle cx="12" cy="12" r="6.4" stroke="url(#xsGrad)" stroke-width="1.8" />
+						<circle cx="12" cy="12" r="1.5" fill="url(#xsGrad)" />
+						<path
+							stroke="url(#xsGrad)"
+							stroke-width="1.8"
+							stroke-linecap="round"
+							d="M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6"
+						/>
+					</svg>
+					<span class="font-display text-base font-semibold">XSearch</span>
+				</div>
+				<p class="text-sm text-ink-500 dark:text-ink-400 leading-relaxed">
+					XSearch is a fast, modern search engine designed to make exploring the web simple, intuitive, and effortless.
+				</p>
+				<button
+					onclick="closeAbout()"
+					class="mt-4 w-full py-2 bg-ink-100 dark:bg-ink-800 hover:bg-ink-200 dark:hover:bg-ink-700 text-ink-700 dark:text-ink-200 text-sm font-medium rounded-xl transition-colors"
+				>
+					Close
+				</button>
+			</div>
+		</div>
+		<script>
+			const API_ENDPOINT = "https://search.xerrortm.workers.dev/search?q=";
+			const AI_ENDPOINT = "https://search.xerrortm.workers.dev/ai";
+			const RECENT_KEY = "xsearch_recent_searches";
+			let currentQuery = "";
+			let isListening = false;
+			let recognition = null;
+			let acIndex = -1;
+			let acItemsCache = [];
+			let aiRequestSeq = 0;
+			document.addEventListener("DOMContentLoaded", () => {
+				initTheme();
+				renderRecentSearches();
+				checkUrlQuery();
+				setupSpeechRecognition();
+				setupKeyboardShortcuts();
+				setupGlobalDismiss();
+				window.addEventListener("scroll", () => {
+					document.getElementById("back-to-top").classList.toggle("hidden", window.scrollY < 400);
+				});
+			});
+			function setupKeyboardShortcuts() {
+				document.addEventListener("keydown", (e) => {
+					const activeTag = document.activeElement?.tagName?.toLowerCase();
+					if ((e.key === "k" && (e.metaKey || e.ctrlKey)) || (e.key === "/" && activeTag !== "input")) {
+						e.preventDefault();
+						const target = document.getElementById("hero-view").classList.contains("hidden")
+							? document.getElementById("top-search-input")
+							: document.getElementById("hero-search-input");
+						target?.focus();
+						target?.select();
+					}
+					if (e.key === "Escape") {
+						closeLightbox();
+						closeAbout();
+						hideAllAc();
+					}
+				});
+			}
+			function setupGlobalDismiss() {
+				document.addEventListener("click", (e) => {
+					if (!e.target.closest("#hero-search-wrap")) hideAc("hero");
+					if (!e.target.closest("#top-search-wrap")) hideAc("top");
+				});
+			}
+			// ---------- storage ----------
+			function getRecentSearches() {
+				try {
+					const s = localStorage.getItem(RECENT_KEY);
+					const p = s ? JSON.parse(s) : [];
+					return Array.isArray(p) ? p : [];
+				} catch (e) {
+					return [];
+				}
+			}
+			function saveRecentSearch(query) {
+				if (!query || !query.trim()) return;
+				const clean = query.trim();
+				try {
+					let searches = getRecentSearches().filter((q) => q.toLowerCase() !== clean.toLowerCase());
+					searches.unshift(clean);
+					localStorage.setItem(RECENT_KEY, JSON.stringify(searches.slice(0, 8)));
+					renderRecentSearches();
+				} catch (e) {}
+			}
+			function clearRecentSearches() {
+				try {
+					localStorage.removeItem(RECENT_KEY);
+					renderRecentSearches();
+				} catch (e) {}
+			}
+			function renderRecentSearches() {
+				const container = document.getElementById("recent-searches-container");
+				const list = document.getElementById("recent-searches-list");
+				const searches = getRecentSearches();
+				if (!searches.length) {
+					container.classList.add("hidden");
+					list.innerHTML = "";
+					return;
+				}
+				container.classList.remove("hidden");
+				list.innerHTML = searches
+					.map(
+						(s, i) => `
+      ${i > 0 ? '<span class="text-ink-300 dark:text-ink-700 text-xs px-0.5">·</span>' : ""}
       <button type="button" onclick="executeSearch('${escapeAttr(s)}')"
-        class="text-xs text-ink-500 dark:text-ink-400 hover:text-brand-600 dark:hover:text-brand-400 hover:underline underline-offset-2 transition-colors focus:outline-none focus:text-brand-600">${escapeHtml(s)}</button>`).join('');
-  }
-
-  // ---------- autocomplete ----------
-  function renderAutocomplete(source){
-    const input = document.getElementById(`${source}-search-input`);
-    const panel = document.getElementById(`${source}-ac-panel`);
-    const q = input.value.trim();
-    const recents = getRecentSearches();
-    let matches = q ? recents.filter(r => r.toLowerCase().includes(q.toLowerCase()) && r.toLowerCase() !== q.toLowerCase()) : recents;
-    matches = matches.slice(0, 5);
-
-    const rows = [];
-    if (q) rows.push({ type:'go', label:q });
-    matches.forEach(m => rows.push({ type:'recent', label:m }));
-
-    if (!rows.length){ panel.classList.add('hidden'); panel.innerHTML=''; acItemsCache=[]; return; }
-    acItemsCache = rows; acIndex = -1;
-
-    panel.innerHTML = rows.map((r, i) => `
+        class="text-xs text-ink-500 dark:text-ink-400 hover:text-brand-600 dark:hover:text-brand-400 hover:underline underline-offset-2 transition-colors focus:outline-none focus:text-brand-600">${escapeHtml(s)}</button>`,
+					)
+					.join("");
+			}
+			// ---------- autocomplete ----------
+			function renderAutocomplete(source) {
+				const input = document.getElementById(`${source}-search-input`);
+				const panel = document.getElementById(`${source}-ac-panel`);
+				const q = input.value.trim();
+				const recents = getRecentSearches();
+				let matches = q
+					? recents.filter((r) => r.toLowerCase().includes(q.toLowerCase()) && r.toLowerCase() !== q.toLowerCase())
+					: recents;
+				matches = matches.slice(0, 5);
+				const rows = [];
+				if (q) rows.push({ type: "go", label: q });
+				matches.forEach((m) => rows.push({ type: "recent", label: m }));
+				if (!rows.length) {
+					panel.classList.add("hidden");
+					panel.innerHTML = "";
+					acItemsCache = [];
+					return;
+				}
+				acItemsCache = rows;
+				acIndex = -1;
+				panel.innerHTML = rows
+					.map(
+						(r, i) => `
       <button type="button" data-ac-index="${i}" onclick="selectAc('${source}', ${i})"
         class="ac-item w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm text-ink-700 dark:text-ink-200 transition-colors">
         <svg class="w-4 h-4 text-ink-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          ${r.type === 'go'
-            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>'
-            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>'}
+          ${
+											r.type === "go"
+												? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>'
+												: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+										}
         </svg>
-        <span class="line-clamp-1">${r.type === 'go' ? `Search for “${escapeHtml(r.label)}”` : escapeHtml(r.label)}</span>
-      </button>`).join('');
-    panel.classList.remove('hidden');
-  }
-  function hideAc(source){ document.getElementById(`${source}-ac-panel`).classList.add('hidden'); acIndex=-1; }
-  function hideAllAc(){ hideAc('hero'); hideAc('top'); }
-  function selectAc(source, i){
-    const row = acItemsCache[i]; if (!row) return;
-    hideAc(source);
-    executeSearch(row.label);
-  }
-  function handleAcKeydown(e, source){
-    const panel = document.getElementById(`${source}-ac-panel`);
-    if (panel.classList.contains('hidden') || !acItemsCache.length) return;
-    const items = panel.querySelectorAll('.ac-item');
-    if (e.key === 'ArrowDown'){ e.preventDefault(); acIndex = Math.min(acIndex+1, items.length-1); updateAcActive(items); }
-    else if (e.key === 'ArrowUp'){ e.preventDefault(); acIndex = Math.max(acIndex-1, 0); updateAcActive(items); }
-    else if (e.key === 'Enter' && acIndex >= 0){ e.preventDefault(); selectAc(source, acIndex); }
-  }
-  function updateAcActive(items){ items.forEach((el,i)=> el.classList.toggle('active', i===acIndex)); }
-
-  // ---------- theme ----------
-  function initTheme(){
-    const saved = localStorage.getItem('xsearch_theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const dark = saved === 'dark' || (!saved && prefersDark);
-    document.documentElement.classList.toggle('dark', dark);
-    document.getElementById('sun-icon').classList.toggle('hidden', !dark);
-    document.getElementById('moon-icon').classList.toggle('hidden', dark);
-  }
-  function toggleTheme(){
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('xsearch_theme', isDark ? 'dark' : 'light');
-    document.getElementById('sun-icon').classList.toggle('hidden', !isDark);
-    document.getElementById('moon-icon').classList.toggle('hidden', isDark);
-  }
-
-  // ---------- view state ----------
-  function checkUrlQuery(){
-    const q = new URLSearchParams(window.location.search).get('q');
-    if (q && q.trim()) executeSearch(q.trim());
-  }
-  function showResultsView(){
-    document.getElementById('hero-view').classList.add('hidden');
-    document.getElementById('results-view').classList.remove('hidden');
-  }
-  function resetToHome(e){
-    if (e) e.preventDefault();
-    currentQuery = '';
-    ['hero','top'].forEach(s => { document.getElementById(`${s}-search-input`).value=''; clearInput(s); hideAc(s); });
-    document.getElementById('results-view').classList.add('hidden');
-    document.getElementById('hero-view').classList.remove('hidden');
-    renderRecentSearches();
-    try { window.history.pushState({}, '', window.location.pathname); } catch(e){}
-    setTimeout(() => document.getElementById('hero-search-input').focus(), 80);
-  }
-  function handleInputChange(source){
-    const input = document.getElementById(`${source}-search-input`);
-    document.getElementById(`${source}-clear-btn`).classList.toggle('hidden', input.value.trim().length === 0);
-    renderAutocomplete(source);
-  }
-  function clearInput(source){
-    const input = document.getElementById(`${source}-search-input`);
-    input.value=''; input.focus();
-    document.getElementById(`${source}-clear-btn`).classList.add('hidden');
-    hideAc(source);
-  }
-  function handleSearch(e, source){
-    e.preventDefault();
-    hideAc(source);
-    const q = document.getElementById(`${source}-search-input`).value.trim();
-    if (q) executeSearch(q);
-  }
-  function retrySearch(){ if (currentQuery) executeSearch(currentQuery); }
-
-  // ---------- search ----------
-  async function executeSearch(query){
-    currentQuery = query;
-    ['hero','top'].forEach(s => { document.getElementById(`${s}-search-input`).value = query; handleInputChange(s); hideAc(s); });
-    saveRecentSearch(query);
-
-    try {
-      const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
-      window.history.pushState({ path:newUrl }, '', newUrl);
-    } catch(e){}
-
-    showResultsView();
-    document.getElementById('loading-state').classList.remove('hidden');
-    document.getElementById('results-list').innerHTML = '';
-    document.getElementById('results-meta').classList.add('hidden');
-    document.getElementById('didyoumean').classList.add('hidden');
-    document.getElementById('related-searches').classList.add('hidden');
-    document.getElementById('error-state').classList.add('hidden');
-    document.getElementById('empty-state').classList.add('hidden');
-    document.getElementById('ai-overview').classList.add('hidden');
-    aiRequestSeq++;
-    const aiToken = aiRequestSeq;
-    window.scrollTo({top:0});
-
-    const t0 = performance.now();
-    try {
-      const response = await fetch(`${API_ENDPOINT}${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
-      document.getElementById('loading-state').classList.add('hidden');
-
-      if (!data.results || !Array.isArray(data.results) || data.results.length === 0){
-        document.getElementById('empty-state').classList.remove('hidden');
-        return;
-      }
-
-      const meta = document.getElementById('results-meta');
-      const count = typeof data.total === 'number' ? data.total : data.results.length;
-      meta.innerHTML = `${count.toLocaleString()} result${count===1?'':'s'} <span class="text-ink-300 dark:text-ink-700">·</span> ${elapsed}s`;
-      meta.classList.remove('hidden');
-
-      const suggestion = data.suggestion || data.corrected_query || data.did_you_mean;
-      if (suggestion && suggestion.toLowerCase() !== query.toLowerCase()){
-        const dym = document.getElementById('didyoumean');
-        dym.innerHTML = `Did you mean: <button onclick="executeSearch('${escapeAttr(suggestion)}')" class="text-brand-600 dark:text-brand-400 font-medium italic hover:underline">${escapeHtml(suggestion)}</button>?`;
-        dym.classList.remove('hidden');
-      }
-
-      const sorted = [...data.results].sort((a,b) => (typeof b.score==='number'?b.score:0) - (typeof a.score==='number'?a.score:0));
-      renderResults(sorted, data.images || []);
-
-      if (shouldShowAiOverview(query)) fetchAiOverview(query, sorted, aiToken);
-
-      const related = data.related || data.related_searches || data.suggestions;
-      if (Array.isArray(related) && related.length){
-        const box = document.getElementById('related-searches');
-        box.innerHTML = `
+        <span class="line-clamp-1">${r.type === "go" ? `Search for “${escapeHtml(r.label)}”` : escapeHtml(r.label)}</span>
+      </button>`,
+					)
+					.join("");
+				panel.classList.remove("hidden");
+			}
+			function hideAc(source) {
+				document.getElementById(`${source}-ac-panel`).classList.add("hidden");
+				acIndex = -1;
+			}
+			function hideAllAc() {
+				hideAc("hero");
+				hideAc("top");
+			}
+			function selectAc(source, i) {
+				const row = acItemsCache[i];
+				if (!row) return;
+				hideAc(source);
+				executeSearch(row.label);
+			}
+			function handleAcKeydown(e, source) {
+				const panel = document.getElementById(`${source}-ac-panel`);
+				if (panel.classList.contains("hidden") || !acItemsCache.length) return;
+				const items = panel.querySelectorAll(".ac-item");
+				if (e.key === "ArrowDown") {
+					e.preventDefault();
+					acIndex = Math.min(acIndex + 1, items.length - 1);
+					updateAcActive(items);
+				} else if (e.key === "ArrowUp") {
+					e.preventDefault();
+					acIndex = Math.max(acIndex - 1, 0);
+					updateAcActive(items);
+				} else if (e.key === "Enter" && acIndex >= 0) {
+					e.preventDefault();
+					selectAc(source, acIndex);
+				}
+			}
+			function updateAcActive(items) {
+				items.forEach((el, i) => el.classList.toggle("active", i === acIndex));
+			}
+			// ---------- theme ----------
+			function initTheme() {
+				const saved = localStorage.getItem("xsearch_theme");
+				const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+				const dark = saved === "dark" || (!saved && prefersDark);
+				document.documentElement.classList.toggle("dark", dark);
+				document.getElementById("sun-icon").classList.toggle("hidden", !dark);
+				document.getElementById("moon-icon").classList.toggle("hidden", dark);
+			}
+			function toggleTheme() {
+				const isDark = document.documentElement.classList.toggle("dark");
+				localStorage.setItem("xsearch_theme", isDark ? "dark" : "light");
+				document.getElementById("sun-icon").classList.toggle("hidden", !isDark);
+				document.getElementById("moon-icon").classList.toggle("hidden", isDark);
+			}
+			// ---------- view state ----------
+			function checkUrlQuery() {
+				const q = new URLSearchParams(window.location.search).get("q");
+				if (q && q.trim()) executeSearch(q.trim());
+			}
+			function showResultsView() {
+				document.getElementById("hero-view").classList.add("hidden");
+				document.getElementById("results-view").classList.remove("hidden");
+			}
+			function resetToHome(e) {
+				if (e) e.preventDefault();
+				currentQuery = "";
+				["hero", "top"].forEach((s) => {
+					document.getElementById(`${s}-search-input`).value = "";
+					clearInput(s);
+					hideAc(s);
+				});
+				document.getElementById("results-view").classList.add("hidden");
+				document.getElementById("hero-view").classList.remove("hidden");
+				renderRecentSearches();
+				try {
+					window.history.pushState({}, "", window.location.pathname);
+				} catch (e) {}
+				setTimeout(() => document.getElementById("hero-search-input").focus(), 80);
+			}
+			function handleInputChange(source) {
+				const input = document.getElementById(`${source}-search-input`);
+				document.getElementById(`${source}-clear-btn`).classList.toggle("hidden", input.value.trim().length === 0);
+				renderAutocomplete(source);
+			}
+			function clearInput(source) {
+				const input = document.getElementById(`${source}-search-input`);
+				input.value = "";
+				input.focus();
+				document.getElementById(`${source}-clear-btn`).classList.add("hidden");
+				hideAc(source);
+			}
+			function handleSearch(e, source) {
+				e.preventDefault();
+				hideAc(source);
+				const q = document.getElementById(`${source}-search-input`).value.trim();
+				if (q) executeSearch(q);
+			}
+			function retrySearch() {
+				if (currentQuery) executeSearch(currentQuery);
+			}
+			// ---------- search ----------
+			async function executeSearch(query) {
+				currentQuery = query;
+				["hero", "top"].forEach((s) => {
+					document.getElementById(`${s}-search-input`).value = query;
+					handleInputChange(s);
+					hideAc(s);
+				});
+				saveRecentSearch(query);
+				try {
+					const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
+					window.history.pushState({ path: newUrl }, "", newUrl);
+				} catch (e) {}
+				showResultsView();
+				document.getElementById("loading-state").classList.remove("hidden");
+				document.getElementById("results-list").innerHTML = "";
+				document.getElementById("results-meta").classList.add("hidden");
+				document.getElementById("didyoumean").classList.add("hidden");
+				document.getElementById("related-searches").classList.add("hidden");
+				document.getElementById("error-state").classList.add("hidden");
+				document.getElementById("empty-state").classList.add("hidden");
+				document.getElementById("ai-overview").classList.add("hidden");
+				aiRequestSeq++;
+				const aiToken = aiRequestSeq;
+				window.scrollTo({ top: 0 });
+				const t0 = performance.now();
+				try {
+					const response = await fetch(`${API_ENDPOINT}${encodeURIComponent(query)}`);
+					if (!response.ok) throw new Error(`HTTP ${response.status}`);
+					const data = await response.json();
+					const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+					document.getElementById("loading-state").classList.add("hidden");
+					if (!data.results || !Array.isArray(data.results) || data.results.length === 0) {
+						document.getElementById("empty-state").classList.remove("hidden");
+						return;
+					}
+					const meta = document.getElementById("results-meta");
+					const count = typeof data.total === "number" ? data.total : data.results.length;
+					meta.innerHTML = `${count.toLocaleString()} result${count === 1 ? "" : "s"} <span class="text-ink-300 dark:text-ink-700">·</span> ${elapsed}s`;
+					meta.classList.remove("hidden");
+					const suggestion = data.suggestion || data.corrected_query || data.did_you_mean;
+					if (suggestion && suggestion.toLowerCase() !== query.toLowerCase()) {
+						const dym = document.getElementById("didyoumean");
+						dym.innerHTML = `Did you mean: <button onclick="executeSearch('${escapeAttr(suggestion)}')" class="text-brand-600 dark:text-brand-400 font-medium italic hover:underline">${escapeHtml(suggestion)}</button>?`;
+						dym.classList.remove("hidden");
+					}
+					const sorted = [...data.results].sort(
+						(a, b) => (typeof b.score === "number" ? b.score : 0) - (typeof a.score === "number" ? a.score : 0),
+					);
+					const ordered = promoteOfficialResult(query, sorted);
+					renderResults(ordered, data.images || []);
+					if (shouldShowAiOverview(query)) fetchAiOverview(query, ordered, aiToken);
+					const related = data.related || data.related_searches || data.suggestions;
+					if (Array.isArray(related) && related.length) {
+						const box = document.getElementById("related-searches");
+						box.innerHTML = `
           <h3 class="text-xs font-semibold text-ink-400 dark:text-ink-500 mb-3">Related searches</h3>
           <div class="flex flex-wrap gap-2">
-            ${related.slice(0,8).map(r => `
+            ${related
+													.slice(0, 8)
+													.map(
+														(r) => `
               <button onclick="executeSearch('${escapeAttr(r)}')" class="px-3 py-1.5 bg-transparent border border-ink-200 dark:border-ink-800 hover:border-brand-400 dark:hover:border-brand-600 hover:text-brand-600 dark:hover:text-brand-400 rounded-md text-xs text-ink-600 dark:text-ink-300 transition-colors">${escapeHtml(r)}</button>
-            `).join('')}
+            `,
+													)
+													.join("")}
           </div>`;
-        box.classList.remove('hidden');
-      }
-    } catch(err){
-      console.error('Search request failed:', err);
-      document.getElementById('loading-state').classList.add('hidden');
-      document.getElementById('error-message').textContent = 'Couldn\'t reach the search service. Check your connection and try again.';
-      document.getElementById('error-state').classList.remove('hidden');
-    }
-  }
-
-  function renderResults(results, images){
-    const container = document.getElementById('results-list');
-    container.innerHTML = '';
-    results.forEach((item, index) => {
-      const domain = getDomain(item.url);
-      const favicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32`;
-      const row = document.createElement('div');
-      row.className = 'result-row';
-      row.innerHTML = `
+						box.classList.remove("hidden");
+					}
+				} catch (err) {
+					console.error("Search request failed:", err);
+					document.getElementById("loading-state").classList.add("hidden");
+					document.getElementById("error-message").textContent =
+						"Couldn't reach the search service. Check your connection and try again.";
+					document.getElementById("error-state").classList.remove("hidden");
+				}
+			}
+			function renderResults(results, images) {
+				const container = document.getElementById("results-list");
+				container.innerHTML = "";
+				results.forEach((item, index) => {
+					const domain = getDomain(item.url);
+					const favicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32`;
+					const row = document.createElement("div");
+					row.className = "result-row";
+					row.innerHTML = `
         <div class="flex items-center gap-2 mb-1.5">
           <img src="${favicon}" alt="" class="w-4 h-4 rounded-sm object-contain bg-ink-100 dark:bg-ink-800" onerror="this.style.display='none'"/>
           <span class="text-xs font-medium text-ink-600 dark:text-ink-400 line-clamp-1">${escapeHtml(domain)}</span>
@@ -604,206 +998,242 @@
         <h2 class="text-[1.15rem] font-medium leading-snug mb-1.5">
           <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="text-ink-900 dark:text-ink-50 hover:text-brand-600 dark:hover:text-brand-400 hover:underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-brand-500/30 rounded">${escapeHtml(item.title || item.url)}</a>
         </h2>
-        <p class="text-[0.9rem] text-ink-500 dark:text-ink-400 leading-relaxed line-clamp-2">${escapeHtml(item.content || 'No description available for this result.')}</p>
+        <p class="text-[0.9rem] text-ink-500 dark:text-ink-400 leading-relaxed line-clamp-2">${escapeHtml(item.content || "No description available for this result.")}</p>
       `;
-      container.appendChild(row);
-      if (index === 0 && Array.isArray(images) && images.length){
-        const imgSection = createImagesSection(images);
-        if (imgSection) container.appendChild(imgSection);
-      }
-    });
-  }
-
-  function createImagesSection(images){
-    const valid = images.filter(Boolean);
-    if (!valid.length) return null;
-    const section = document.createElement('div');
-    section.className = 'my-4 py-5 border-y border-ink-200/70 dark:border-ink-800/70';
-    const items = valid.map((img, i) => {
-      let url='', target='', alt='Result image';
-      if (typeof img === 'string'){ url=img; target=img; }
-      else if (img && typeof img === 'object'){
-        url = img.url || img.image_url || '';
-        target = img.target_url || img.source_url || img.url || url;
-        alt = img.description || img.alt || 'Result image';
-      }
-      if (!url) return '';
-      return `
+					container.appendChild(row);
+					if (index === 0 && Array.isArray(images) && images.length) {
+						const imgSection = createImagesSection(images);
+						if (imgSection) container.appendChild(imgSection);
+					}
+				});
+			}
+			function promoteOfficialResults(query, results) {
+				const q = query.toLowerCase().replace(/[^a-z0-9]/g, "");
+				if (!q || q.length > 20) return results;
+				const getDomain = (url) => {
+					try {
+						return new URL(url).hostname
+							.replace(/^www\./, "")
+							.split(".")[0]
+							.replace(/[^a-z0-9]/g, "");
+					} catch (e) {
+						return "";
+					}
+				};
+				const official = results.filter((r) => getDomain(r.url) === q);
+				if (official.length) {
+					return [...official, ...results.filter((r) => !official.includes(r))];
+				}
+				const relevant = results.filter(
+					(r) =>
+						getDomain(r.url).includes(q) ||
+						(r.title || "")
+							.toLowerCase()
+							.replace(/[^a-z0-9]/g, "")
+							.includes(q),
+				);
+				if (relevant.length) {
+					return [...relevant, ...results.filter((r) => !relevant.includes(r))];
+				}
+				return results;
+			}
+			function createImagesSection(images) {
+				const valid = images.filter(Boolean);
+				if (!valid.length) return null;
+				const section = document.createElement("div");
+				section.className = "my-4 py-5 border-y border-ink-200/70 dark:border-ink-800/70";
+				const items = valid
+					.map((img, i) => {
+						let url = "",
+							target = "",
+							alt = "Result image";
+						if (typeof img === "string") {
+							url = img;
+							target = img;
+						} else if (img && typeof img === "object") {
+							url = img.url || img.image_url || "";
+							target = img.target_url || img.source_url || img.url || url;
+							alt = img.description || img.alt || "Result image";
+						}
+						if (!url) return "";
+						return `
         <button type="button" onclick='openLightbox(${JSON.stringify(url)}, ${JSON.stringify(target)})'
           class="group/img flex-none relative w-32 h-24 sm:w-40 sm:h-28 rounded-lg overflow-hidden bg-ink-100 dark:bg-ink-800 border border-ink-200/70 dark:border-ink-800 hover:border-brand-400 dark:hover:border-brand-600 transition-colors focus:outline-none">
           <img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" class="w-full h-full object-cover" onerror="this.closest('button').remove()"/>
           <span class="absolute inset-0 bg-ink-950/0 group-hover/img:bg-ink-950/10 transition-colors"></span>
         </button>`;
-    }).join('');
-    if (!items.trim()) return null;
-    section.innerHTML = `
+					})
+					.join("");
+				if (!items.trim()) return null;
+				section.innerHTML = `
       <div class="flex items-center gap-2 mb-3">
         <svg class="w-4 h-4 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         <h3 class="text-xs font-semibold text-ink-500 dark:text-ink-400">Images</h3>
       </div>
       <div class="flex gap-3 overflow-x-auto pb-1 scrollbar-thin">${items}</div>
     `;
-    return section;
-  }
-
-  function openLightbox(url, target){
-    document.getElementById('lightbox-img').src = url;
-    document.getElementById('lightbox-link').href = target || url;
-    document.getElementById('lightbox').classList.remove('hidden');
-  }
-  function closeLightbox(e){
-    if (e && e.target !== e.currentTarget && e.type==='click') return;
-    document.getElementById('lightbox').classList.add('hidden');
-    document.getElementById('lightbox-img').src = '';
-  }
-
-  function openAbout(){ document.getElementById('about-modal').classList.remove('hidden'); }
-  function closeAbout(e){
-    if (e && e.target !== e.currentTarget && e.type==='click') return;
-    document.getElementById('about-modal').classList.add('hidden');
-  }
-
-  // ---------- AI Overview & Citation Parsing ----------
-  function shouldShowAiOverview(query){
-    return Boolean(query && query.trim().length > 1);
-  }
-
-  async function fetchAiOverview(query, results, seq){
-    const container = document.getElementById('ai-overview');
-    const body = document.getElementById('ai-overview-body');
-    if (!container || !body) return;
-
-    container.classList.remove('hidden');
-    body.innerHTML = `
+				return section;
+			}
+			function openLightbox(url, target) {
+				document.getElementById("lightbox-img").src = url;
+				document.getElementById("lightbox-link").href = target || url;
+				document.getElementById("lightbox").classList.remove("hidden");
+			}
+			function closeLightbox(e) {
+				if (e && e.target !== e.currentTarget && e.type === "click") return;
+				document.getElementById("lightbox").classList.add("hidden");
+				document.getElementById("lightbox-img").src = "";
+			}
+			function openAbout() {
+				document.getElementById("about-modal").classList.remove("hidden");
+			}
+			function closeAbout(e) {
+				if (e && e.target !== e.currentTarget && e.type === "click") return;
+				document.getElementById("about-modal").classList.add("hidden");
+			}
+			// ---------- AI Overview & Citation Parsing ----------
+			function shouldShowAiOverview(query) {
+				return Boolean(query && query.trim().length > 1);
+			}
+			async function fetchAiOverview(query, results, seq) {
+				const container = document.getElementById("ai-overview");
+				const body = document.getElementById("ai-overview-body");
+				if (!container || !body) return;
+				container.classList.remove("hidden");
+				body.innerHTML = `
       <div class="space-y-2 py-1">
         <div class="h-3.5 xs-skel rounded w-11/12"></div>
         <div class="h-3.5 xs-skel rounded w-4/5"></div>
       </div>
     `;
-
-    try {
-      let response;
-      try {
-        response = await fetch(`${AI_ENDPOINT}?q=${encodeURIComponent(query)}`);
-        if (!response.ok) throw new Error('GET failed');
-      } catch(e) {
-        response = await fetch(AI_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query, results: (results || []).slice(0, 5) })
-        });
-      }
-
-      if (seq !== aiRequestSeq) return;
-
-      if (!response.ok) throw new Error(`AI HTTP ${response.status}`);
-      const data = await response.json();
-      if (seq !== aiRequestSeq) return;
-
-      const rawText = typeof data === 'string' ? data : (data.answer || data.response || data.text || data.ai_overview || '');
-
-      if (!rawText || !rawText.trim()){
-        container.classList.add('hidden');
-        return;
-      }
-
-      body.innerHTML = renderAiTextWithCitations(rawText.trim());
-    } catch(err){
-      console.error('AI Overview error:', err);
-      if (seq === aiRequestSeq){
-        container.classList.add('hidden');
-      }
-    }
-  }
-
-  function renderAiTextWithCitations(rawText){
-    if (!rawText) return '';
-
-    const citationRegex = /\[([^\]|]*)\|([^\]]*)\]/g;
-    let resultHtml = '';
-    let lastIndex = 0;
-    let match;
-
-    while ((match = citationRegex.exec(rawText)) !== null) {
-      const matchIndex = match.index;
-      const fullMatch = match[0];
-      const sourceName = match[1].trim();
-      const rawUrl = match[2].trim();
-
-      // Safely append preceding unescaped text
-      const textBefore = rawText.substring(lastIndex, matchIndex);
-      resultHtml += escapeHtml(textBefore);
-
-      // Validate URL scheme (must be http or https to prevent javascript: XSS)
-      let safeUrl = null;
-      if (/^https?:\/\//i.test(rawUrl)) {
-        safeUrl = rawUrl;
-      }
-
-      if (safeUrl && sourceName) {
-        const escapedName = escapeHtml(sourceName);
-        const escapedUrl = escapeHtml(safeUrl);
-        resultHtml += `<a href="${escapedUrl}" target="_blank" rel="noopener noreferrer" aria-label="Source: ${escapedName}" title="Source: ${escapedName}" class="ai-citation-chip px-1.5 py-0.5 mx-0.5 text-[0.72rem] font-medium leading-none text-aura-700 dark:text-aura-300 bg-aura-100/60 dark:bg-aura-900/40 hover:bg-aura-100 dark:hover:bg-aura-900/70 border border-aura-200/70 dark:border-aura-700/50 rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-aura-500/40 whitespace-nowrap">${escapedName}</a>`;
-      } else {
-        // Fallback for malformed or unsafe URLs
-        resultHtml += escapeHtml(fullMatch);
-      }
-
-      lastIndex = citationRegex.lastIndex;
-    }
-
-    if (lastIndex < rawText.length) {
-      resultHtml += escapeHtml(rawText.substring(lastIndex));
-    }
-
-    return resultHtml.replace(/\n\n/g, '<br/><br/>').replace(/\n/g, '<br/>');
-  }
-
-  function getDomain(urlString){
-    try { return new URL(urlString).hostname.replace(/^www\./,''); } catch(e){ return urlString; }
-  }
-  function escapeHtml(str){
-    if (!str) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-  }
-  function escapeAttr(str){ return escapeHtml(str).replace(/`/g,'&#96;'); }
-
-  // ---------- voice ----------
-  function setupSpeechRecognition(){
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SR){
-      recognition = new SR();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-      recognition.onresult = (e) => { const t = e.results[0][0].transcript; if (t) executeSearch(t); stopListening(); };
-      recognition.onerror = stopListening;
-      recognition.onend = stopListening;
-    } else {
-      document.getElementById('hero-mic-btn')?.style.setProperty('display','none');
-      document.getElementById('top-mic-btn')?.style.setProperty('display','none');
-    }
-  }
-  function toggleVoiceSearch(source){
-    if (!recognition) return;
-    if (isListening){ recognition.stop(); stopListening(); }
-    else {
-      try {
-        recognition.start(); isListening = true;
-        const btn = document.getElementById(`${source}-mic-btn`);
-        btn?.classList.add('text-red-500','animate-pulse');
-      } catch(e){}
-    }
-  }
-  function stopListening(){
-    isListening = false;
-    ['hero','top'].forEach(s => document.getElementById(`${s}-mic-btn`)?.classList.remove('text-red-500','animate-pulse'));
-  }
-
-  window.addEventListener('popstate', () => {
-    const q = new URLSearchParams(window.location.search).get('q');
-    if (q) executeSearch(q); else resetToHome();
-  });
-</script>
-</body>
+				try {
+					let response;
+					try {
+						response = await fetch(`${AI_ENDPOINT}?q=${encodeURIComponent(query)}`);
+						if (!response.ok) throw new Error("GET failed");
+					} catch (e) {
+						response = await fetch(AI_ENDPOINT, {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ query, results: (results || []).slice(0, 5) }),
+						});
+					}
+					if (seq !== aiRequestSeq) return;
+					if (!response.ok) throw new Error(`AI HTTP ${response.status}`);
+					const data = await response.json();
+					if (seq !== aiRequestSeq) return;
+					const rawText =
+						typeof data === "string" ? data : data.answer || data.response || data.text || data.ai_overview || "";
+					if (!rawText || !rawText.trim()) {
+						container.classList.add("hidden");
+						return;
+					}
+					body.innerHTML = renderAiTextWithCitations(rawText.trim());
+				} catch (err) {
+					console.error("AI Overview error:", err);
+					if (seq === aiRequestSeq) {
+						container.classList.add("hidden");
+					}
+				}
+			}
+			function renderAiTextWithCitations(rawText) {
+				if (!rawText) return "";
+				const citationRegex = /\[([^\]|]*)\|([^\]]*)\]/g;
+				let resultHtml = "";
+				let lastIndex = 0;
+				let match;
+				while ((match = citationRegex.exec(rawText)) !== null) {
+					const matchIndex = match.index;
+					const fullMatch = match[0];
+					const sourceName = match[1].trim();
+					const rawUrl = match[2].trim();
+					// Safely append preceding unescaped text
+					const textBefore = rawText.substring(lastIndex, matchIndex);
+					resultHtml += escapeHtml(textBefore);
+					// Validate URL scheme (must be http or https to prevent javascript: XSS)
+					let safeUrl = null;
+					if (/^https?:\/\//i.test(rawUrl)) {
+						safeUrl = rawUrl;
+					}
+					if (safeUrl && sourceName) {
+						const escapedName = escapeHtml(sourceName);
+						const escapedUrl = escapeHtml(safeUrl);
+						resultHtml += `<a href="${escapedUrl}" target="_blank" rel="noopener noreferrer" aria-label="Source: ${escapedName}" title="Source: ${escapedName}" class="ai-citation-chip px-1.5 py-0.5 mx-0.5 text-[0.72rem] font-medium leading-none text-aura-700 dark:text-aura-300 bg-aura-100/60 dark:bg-aura-900/40 hover:bg-aura-100 dark:hover:bg-aura-900/70 border border-aura-200/70 dark:border-aura-700/50 rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-aura-500/40 whitespace-nowrap">${escapedName}</a>`;
+					} else {
+						// Fallback for malformed or unsafe URLs
+						resultHtml += escapeHtml(fullMatch);
+					}
+					lastIndex = citationRegex.lastIndex;
+				}
+				if (lastIndex < rawText.length) {
+					resultHtml += escapeHtml(rawText.substring(lastIndex));
+				}
+				return resultHtml.replace(/\n\n/g, "<br/><br/>").replace(/\n/g, "<br/>");
+			}
+			function getDomain(urlString) {
+				try {
+					return new URL(urlString).hostname.replace(/^www\./, "");
+				} catch (e) {
+					return urlString;
+				}
+			}
+			function escapeHtml(str) {
+				if (!str) return "";
+				return String(str)
+					.replace(/&/g, "&amp;")
+					.replace(/</g, "&lt;")
+					.replace(/>/g, "&gt;")
+					.replace(/"/g, "&quot;")
+					.replace(/'/g, "&#039;");
+			}
+			function escapeAttr(str) {
+				return escapeHtml(str).replace(/`/g, "&#96;");
+			}
+			// ---------- voice ----------
+			function setupSpeechRecognition() {
+				const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+				if (SR) {
+					recognition = new SR();
+					recognition.continuous = false;
+					recognition.interimResults = false;
+					recognition.lang = "en-US";
+					recognition.onresult = (e) => {
+						const t = e.results[0][0].transcript;
+						if (t) executeSearch(t);
+						stopListening();
+					};
+					recognition.onerror = stopListening;
+					recognition.onend = stopListening;
+				} else {
+					document.getElementById("hero-mic-btn")?.style.setProperty("display", "none");
+					document.getElementById("top-mic-btn")?.style.setProperty("display", "none");
+				}
+			}
+			function toggleVoiceSearch(source) {
+				if (!recognition) return;
+				if (isListening) {
+					recognition.stop();
+					stopListening();
+				} else {
+					try {
+						recognition.start();
+						isListening = true;
+						const btn = document.getElementById(`${source}-mic-btn`);
+						btn?.classList.add("text-red-500", "animate-pulse");
+					} catch (e) {}
+				}
+			}
+			function stopListening() {
+				isListening = false;
+				["hero", "top"].forEach((s) =>
+					document.getElementById(`${s}-mic-btn`)?.classList.remove("text-red-500", "animate-pulse"),
+				);
+			}
+			window.addEventListener("popstate", () => {
+				const q = new URLSearchParams(window.location.search).get("q");
+				if (q) executeSearch(q);
+				else resetToHome();
+			});
+		</script>
+	</body>
 </html>
