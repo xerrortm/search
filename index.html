@@ -1150,13 +1150,18 @@
     const sourceName = match[1].trim();
     const rawUrl = match[2].trim();
 
-    if (/^https?:\/\//i.test(rawUrl) && sourceName) {
-      html += `<a href="${escapeHtml(rawUrl)}"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="ai-citation-chip px-1.5 py-0.5 mx-0.5 text-[0.72rem] font-medium leading-none text-aura-700 dark:text-aura-300 bg-aura-100/60 dark:bg-aura-900/40 hover:bg-aura-100 dark:hover:bg-aura-900/70 border border-aura-200/70 dark:border-aura-700/50 rounded-md transition-colors duration-150 whitespace-nowrap">
-        ${escapeHtml(sourceName)}
-      </a>`;
+    if (sourceName && /^https?:\/\//i.test(rawUrl)) {
+      const url = escapeHtml(rawUrl);
+
+      html += `
+        <span class="ai-citation-chip">
+          <a
+            href="${url}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="px-1.5 py-0.5 mx-0.5 text-[0.72rem] font-medium leading-none text-aura-700 dark:text-aura-300 bg-aura-100/60 dark:bg-aura-900/40 hover:bg-aura-100 dark:hover:bg-aura-900/70 border border-aura-200/70 dark:border-aura-700/50 rounded-md transition-colors duration-150 whitespace-nowrap"
+          >${escapeHtml(sourceName)}</a>
+        </span>`;
     } else {
       html += escapeHtml(match[0]);
     }
