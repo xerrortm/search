@@ -1128,7 +1128,7 @@
 						container.classList.add("hidden");
 						return;
 					}
-					body.innerHTML = renderAiTextWithCitations(rawText.trim());
+					renderAiTextWithCitations(rawText.trim());
 				} catch (err) {
 					console.error("AI Overview error:", err);
 					if (seq === aiRequestSeq) {
@@ -1136,44 +1136,83 @@
 					}
 				}
 			}
-			function renderAiTextWithCitations(rawText){
-  if (!rawText) return '';
+			function renderAiTextWithCitations(rawText) {
+  const body = document.getElementById("ai-overview-body");
+  if (!body) return;
 
-  const citationRegex = /\[([^\]|]*)\|([^\]]*)\]/g;
-  let html = '';
+  body.innerHTML = "";
+
+  const regex = /\[([^\]|]*)\|([^\]]*)\]|\*\*(.+?)\*\*/g;
   let lastIndex = 0;
   let match;
 
-  while ((match = citationRegex.exec(rawText)) !== null) {
-    html += formatAiText(rawText.slice(lastIndex, match.index));
+  function addText(text) {
+    if (!text) return;
 
-    const sourceName = match[1].trim();
-    const rawUrl = match[2].trim();
+    const parts = text.split("\n");
 
-    if (sourceName && /^https?:\/\//i.test(rawUrl)) {
-      const url = escapeHtml(rawUrl);
+    parts.forEach((part, index) => {
+      if (index > 0) body.appendChild(document.createElement("br"));
 
-      html += `
-        <span class="ai-citation-chip">
-          <a
-            href="${url}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="px-1.5 py-0.5 mx-0.5 text-[0.72rem] font-medium leading-none text-aura-700 dark:text-aura-300 bg-aura-100/60 dark:bg-aura-900/40 hover:bg-aura-100 dark:hover:bg-aura-900/70 border border-aura-200/70 dark:border-aura-700/50 rounded-md transition-colors duration-150 whitespace-nowrap"
-          >${escapeHtml(sourceName)}</a>
-        </span>`;
-    } else {
-      html += escapeHtml(match[0]);
-    }
-
-    lastIndex = citationRegex.lastIndex;
+      if (part) {
+        body.appendChild(document.createTextNode(part));
+      }
+    });
   }
 
-  html += formatAiText(rawText.slice(lastIndex));
+  while ((match = regex.exec(rawText)) !== null) {
+    addText(rawText.slice(lastIndex, match.index));
 
-  return html
-    .replace(/\n\n/g, '<br><br>')
-    .replace(/\n/g, '<br>');
+    // Bold text
+    if (match[3]) {
+      const strong = document.createElement("strong");
+      strong.className =
+        "font-semibold text-aura-600 dark:text-aura-400";
+      strong.textContent = match[3];
+      body.appendChild(strong);
+    }
+
+    // Citation
+    else {
+      const sourceName = match[1].trim();
+      const rawUrl = match[2].trim();
+
+      try {
+        const url = new URL(rawUrl);
+
+        if (
+          (url.protocol === "http:" || url.protocol === "https:") &&
+          sourceName
+        ) {
+          const link = document.createElement("a");
+
+          link.href = url.href;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+
+          link.className =
+            "px-1.5 py-0.5 mx-0.5 text-[0.72rem] font-medium leading-none " +
+            "text-aura-700 dark:text-aura-300 " +
+            "bg-aura-100/60 dark:bg-aura-900/40 " +
+            "hover:bg-aura-100 dark:hover:bg-aura-900/70 " +
+            "border border-aura-200/70 dark:border-aura-700/50 " +
+            "rounded-md transition-colors duration-150 whitespace-nowrap";
+
+          link.textContent = sourceName;
+
+          body.appendChild(link);
+        } else {
+          addText(match[0]);
+        }
+      } catch {
+        addText(match[0]);
+      }
+    }
+
+    lastIndex = regex.lastIndex;
+  }
+
+  addText(rawText.slice(lastIndex));
 }
 
 function formatAiText(text){
