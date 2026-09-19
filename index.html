@@ -1140,43 +1140,41 @@
   if (!rawText) return '';
 
   const citationRegex = /\[([^\]|]*)\|([^\]]*)\]/g;
-  let resultHtml = '';
+  let html = '';
   let lastIndex = 0;
   let match;
 
   while ((match = citationRegex.exec(rawText)) !== null) {
-    resultHtml += formatAiText(rawText.substring(lastIndex, match.index));
+    html += formatAiText(rawText.slice(lastIndex, match.index));
 
     const sourceName = match[1].trim();
     const rawUrl = match[2].trim();
 
     if (/^https?:\/\//i.test(rawUrl) && sourceName) {
-      resultHtml += `
-        <a href="${escapeHtml(rawUrl)}" target="_blank" rel="noopener noreferrer"
-          class="ai-citation-chip px-1.5 py-0.5 mx-0.5 text-[0.72rem] font-medium
-          leading-none text-aura-700 dark:text-aura-300 bg-aura-100/60
-          dark:bg-aura-900/40 hover:bg-aura-100 dark:hover:bg-aura-900/70
-          border border-aura-200/70 dark:border-aura-700/50 rounded-md
-          transition-colors duration-150 whitespace-nowrap">
-          ${escapeHtml(sourceName)}
-        </a>`;
+      html += `<a href="${escapeHtml(rawUrl)}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="ai-citation-chip px-1.5 py-0.5 mx-0.5 text-[0.72rem] font-medium leading-none text-aura-700 dark:text-aura-300 bg-aura-100/60 dark:bg-aura-900/40 hover:bg-aura-100 dark:hover:bg-aura-900/70 border border-aura-200/70 dark:border-aura-700/50 rounded-md transition-colors duration-150 whitespace-nowrap">
+        ${escapeHtml(sourceName)}
+      </a>`;
     } else {
-      resultHtml += escapeHtml(match[0]);
+      html += escapeHtml(match[0]);
     }
 
     lastIndex = citationRegex.lastIndex;
   }
 
-  resultHtml += formatAiText(rawText.substring(lastIndex));
+  html += formatAiText(rawText.slice(lastIndex));
 
-  return resultHtml
-    .replace(/\n\n/g, '<br/><br/>')
-    .replace(/\n/g, '<br/>');
+  return html
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
 }
 
 function formatAiText(text){
-  return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, (_, content) =>
-    `<strong class="font-semibold text-aura-600 dark:text-aura-400">${content}</strong>`
+  return escapeHtml(text).replace(
+    /\*\*(.+?)\*\*/g,
+    '<strong class="font-semibold text-aura-600 dark:text-aura-400">$1</strong>'
   );
 }
 			function getDomain(urlString) {
