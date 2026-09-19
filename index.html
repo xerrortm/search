@@ -954,7 +954,7 @@
 					const sorted = [...data.results].sort(
 						(a, b) => (typeof b.score === "number" ? b.score : 0) - (typeof a.score === "number" ? a.score : 0),
 					);
-					const ordered = promoteOfficialResult(query, sorted);
+					const ordered = promoteOfficialResults(query, sorted);
 					renderResults(ordered, data.images || []);
 					if (shouldShowAiOverview(query)) fetchAiOverview(query, ordered, aiToken);
 					const related = data.related || data.related_searches || data.suggestions;
